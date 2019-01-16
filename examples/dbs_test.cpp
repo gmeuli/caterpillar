@@ -36,7 +36,7 @@ int main( int argc, char** argv )
         std::cout << "      qubits: " << q_circ.num_qubits() << ", gates: " << q_circ.num_gates() << ", T-gates: " << T_number << std::endl;
 
         const auto stg_circ_pk = tweedledum::decomposition_based_synthesis<netlist<mcmt_gate>>(val, tweedledum::stg_from_pkrm());
-        const auto q_circ_pk = tweedledum::relative_phase_mapping<netlist<mcmt_gate>>( stg_circ );
+        const auto q_circ_pk = tweedledum::relative_phase_mapping<netlist<mcmt_gate>>( stg_circ_pk );
         std::cout << "  stg_from_pkrm" << std::endl;
         T_number = 0;
         q_circ_pk.foreach_gate([&] (auto& gate) { if(gate.gate.kind() == tweedledum::gate_kinds_t::t ) T_number++; } );

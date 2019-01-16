@@ -2,7 +2,6 @@
 
 # caterpillar
 
-<img src="https://cdn.rawgit.com/lsils/mockturtle/master/mockturtle.svg" width="64" height="64" align="left" style="margin-right: 12pt" />
 caterpillar is a C++-17 logic network library.  It provides several LUT-based methods for the for quantum compilation.
 
 

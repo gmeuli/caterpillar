@@ -57,8 +57,8 @@ int main( int argc, char** argv )
     std::cout << "[i] benchmark: " + key << std::endl;
 
     { /* PPRM */
-      auto val_copy0 = val;
-      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy0, tweedledum::stg_from_pprm() );
+      auto val_copy = val;
+      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_pprm() );
       const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
 
       std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
@@ -69,15 +69,17 @@ int main( int argc, char** argv )
     }
 
     { /* PKRM */
-      auto val_copy1 = val;
-      const auto stg_circ_pk = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy1, tweedledum::stg_from_pkrm() );
-      const auto q_circ_pk = tweedledum::relative_phase_mapping<netlist_t>( stg_circ_pk );
+      auto val_copy = val;
+      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_pkrm() );
+      const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
 
       std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
                                 "PPKM",
-                                q_circ_pk.num_qubits(),
-                                q_circ_pk.num_gates(),
-                                count_T_gates( q_circ_pk ) );
+                                q_circ.num_qubits(),
+                                q_circ.num_gates(),
+                                count_T_gates( q_circ ) );
+    }
+
     }
   }
 

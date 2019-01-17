@@ -2,13 +2,51 @@
 #include <tweedledum/algorithms/synthesis/decomposition_based.hpp>
 #include <tweedledum/algorithms/synthesis/single_target_gates.hpp>
 #include <tweedledum/gates/mcmt_gate.hpp>
+#include <mockturtle/utils/stopwatch.hpp>
 #include <vector>
 #include <map>
 
 using namespace tweedledum;
+using namespace mockturtle;
+
+// https://stackoverflow.com/questions/1198260/iterate-over-tuple
+
+template<typename Ntk, typename SynthesisFn>
+void run_dbs_with_strategy( std::vector<uint16_t> perm, SynthesisFn const& synth_fn, std::string const name = "NO_NAME" )
+{
+  auto count_T_gates = [&]( Ntk const& netlist ){
+    auto T_number = 0u;
+    netlist.foreach_gate( [&]( const auto& gate ){
+        if ( gate.gate.kind() == tweedledum::gate_kinds_t::t )
+        {
+          ++T_number;
+        }
+      });
+    return T_number;
+  };
+
+  stopwatch<>::duration time{0};
+
+  Ntk stg_circ, q_circ;
+  {
+    stopwatch t( time );
+    stg_circ = tweedledum::decomposition_based_synthesis<Ntk>( perm, synth_fn );
+    q_circ = tweedledum::relative_phase_mapping<Ntk>( stg_circ );
+  }
+  std::cout << fmt::format( "[i] strategy = {:16} qubits = {:8d} gates = {:8d} T-gates = {:8d} ({:>8.2f} secs)\n",
+                            name,
+                            q_circ.num_qubits(),
+                            q_circ.num_gates(),
+                            count_T_gates( q_circ ),
+                            to_seconds( time ) );
+}
 
 int main( int argc, char** argv )
 {
+  /* cost functions */
+  auto lit_cost = []( kitty::cube const& cube ){ return cube.num_literals() + 1; };
+  auto complex_cost = []( kitty::cube const& cube ){ return 1 + 100*( cube.num_literals() > 1 ); };
+
   /* prime */
   std::vector<uint16_t> prime3{{0, 2, 3, 5, 7, 1, 4, 6}};
   std::vector<uint16_t> prime4{{0, 2, 3, 5, 7, 11, 13, 1, 4, 6, 8, 9, 10, 12, 14, 15}};
@@ -41,56 +79,18 @@ int main( int argc, char** argv )
 
   using netlist_t = netlist<mcmt_gate>;
 
-  auto count_T_gates = [&]( netlist_t const& netlist ){
-    auto T_number = 0u;
-    netlist.foreach_gate( [&]( const auto& gate ){
-        if ( gate.gate.kind() == tweedledum::gate_kinds_t::t )
-        {
-          ++T_number;
-        }
-      });
-    return T_number;
-  };
-
   for( auto& [key, val] : benchmarks )
   {
     std::cout << "[i] benchmark: " + key << std::endl;
+    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pprm(), "PPRM" );
+    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pkrm(), "PKRM" );
+    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis(),               "EXACT(unit)" );
 
-    { /* PPRM */
-      auto val_copy = val;
-      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_pprm() );
-      const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
+    if ( key == "prime6" )
+      continue;
 
-      std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
-                                "PPRM",
-                                q_circ.num_qubits(),
-                                q_circ.num_gates(),
-                                count_T_gates( q_circ ) );
-    }
-
-    { /* PKRM */
-      auto val_copy = val;
-      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_pkrm() );
-      const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
-
-      std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
-                                "PPKM",
-                                q_circ.num_qubits(),
-                                q_circ.num_gates(),
-                                count_T_gates( q_circ ) );
-    }
-
-    { /* EXACT SYTHESIS */
-      auto val_copy = val;
-      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_exact_synthesis() );
-      const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
-
-      std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
-                                "EXACT",
-                                q_circ.num_qubits(),
-                                q_circ.num_gates(),
-                                count_T_gates( q_circ ) );
-    }
+    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( lit_cost ),     "EXACT(lit)" );
+    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( complex_cost ), "EXACT(complex)" );
   }
 
   return 0;

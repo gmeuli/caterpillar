@@ -4708,7 +4708,7 @@ inline void Solver::adaptSolver() {
     if(!adjusted) {
         // printf("c Nothing extreme in this problem, continue with glucose default strategies.\n");
     }
-    printf("c\n");
+    // printf("c\n");
     if(adjusted) { // Let's reinitialize the glucose restart strategy counters
         lbdQueue.fastclear();
         sumLBD = 0;

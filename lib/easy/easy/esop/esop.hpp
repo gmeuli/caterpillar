@@ -52,13 +52,13 @@ using esops_t = std::vector<esop_t>;
  */
 inline unsigned min_pairwise_distance( const esop_t& esop )
 {
-  unsigned min = std::numeric_limits<unsigned>::max();
+  auto min = std::numeric_limits<unsigned>::max();
   for ( auto i = 0u; i < esop.size(); ++i )
   {
     for ( auto j = i + 1; j < esop.size(); ++j )
     {
       const auto d = esop[i].distance( esop[j] );
-      if ( d < min )
+      if ( unsigned(d) < min )
       {
         min = d;
       }
@@ -76,13 +76,13 @@ inline unsigned min_pairwise_distance( const esop_t& esop )
  */
 inline unsigned max_pairwise_distance( const esop_t& esop )
 {
-  unsigned max = 0u;
+  unsigned max = 0;
   for ( auto i = 0u; i < esop.size(); ++i )
   {
     for ( auto j = i + 1; j < esop.size(); ++j )
     {
       const auto d = esop[i].distance( esop[j] );
-      if ( d > max )
+      if ( unsigned(d) > max )
       {
         max = d;
       }
@@ -131,9 +131,9 @@ inline bool verify_esop( const esop_t& esop, const std::string& bits, const std:
   kitty::dynamic_truth_table tt( number_of_variables );
   kitty::create_from_cubes( tt, esop, true );
 
-  for ( auto i = 0; i < bits.size(); ++i )
+  for ( auto i = 0u; i < bits.size(); ++i )
   {
-    if ( care[i] && bits[i] != '0' + get_bit( tt, i ) )
+    if ( care[i] && bits[i] != '0' + char(get_bit( tt, i )) )
     {
       return false;
     }

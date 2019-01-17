@@ -80,7 +80,19 @@ int main( int argc, char** argv )
                                 count_T_gates( q_circ ) );
     }
 
+#if 0
+    { /* EXACT SYTHESIS */
+      auto val_copy = val;
+      const auto stg_circ = tweedledum::decomposition_based_synthesis<netlist_t>( val_copy, tweedledum::stg_from_exact_synthesis() );
+      const auto q_circ = tweedledum::relative_phase_mapping<netlist_t>( stg_circ );
+
+      std::cout << fmt::format( "[i] strategy = {} qubits = {:8d} gates = {:8d} T-gates = {:8d}\n",
+                                "EXACT",
+                                q_circ.num_qubits(),
+                                q_circ.num_gates(),
+                                count_T_gates( q_circ ) );
     }
+#endif
   }
 
   return 0;

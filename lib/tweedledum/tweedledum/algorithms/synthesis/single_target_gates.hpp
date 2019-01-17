@@ -175,7 +175,7 @@ struct stg_from_spectrum {
 struct stg_from_exact_synthesis
 {
   template<class Network>
-  void operator()( Network& network, kitty::dynamic_truth_table const& function, std::vector<uint32_t> const& qubit_map ) const
+  void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<uint32_t> const& qubit_map ) const
   {
     const auto num_controls = function.num_vars();
     assert( qubit_map.size() == std::size_t( num_controls ) + 1u );
@@ -184,18 +184,10 @@ struct stg_from_exact_synthesis
     easy::esop::helliwell_maxsat_statistics stats;
     easy::esop::helliwell_maxsat_params ps;
     auto const& esop = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function );
-    for ( const auto& cube : esop )
-    {
-      cube.print();
-      std::cout << std::endl;
-    }
-    std::cout << std::endl;
 
     std::vector<uint32_t> target = {qubit_map.back()};
     for (auto const& cube : esop )
     {
-      /* TODO do nothing for now */
-#if 0
       std::vector<uint32_t> controls, negations;
       auto bits = cube._bits;
       auto mask = cube._mask;
@@ -216,7 +208,6 @@ struct stg_from_exact_synthesis
       for (auto n : negations) {
         net.add_gate(gate_kinds_t::cx, n);
       }
-#endif
     }
   }
 };

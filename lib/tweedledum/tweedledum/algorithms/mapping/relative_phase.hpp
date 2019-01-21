@@ -11,6 +11,7 @@
 #include "../generic/rewrite.hpp"
 
 #include <iostream>
+#include <vector>
 
 namespace tweedledum {
 

@@ -147,7 +147,7 @@ Network decomposition_based_synthesis(std::vector<uint16_t>& perm, STGSynthesisF
 	}
 
 	for (auto const& [tt, vars] : gates) {
-		std::cout << "vars: " << tt.num_vars() << std::endl; 
+		// std::cout << "vars: " << tt.num_vars() << std::endl;
 		if (ps.verbose)
 			std::cout << "[i] synthesize " << kitty::to_hex(tt) << " onto "
 			          << std::accumulate(vars.begin() + 1, vars.end(),

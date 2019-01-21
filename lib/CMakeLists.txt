@@ -17,6 +17,11 @@ if (NOT TARGET fmt)
   target_compile_definitions(fmt INTERFACE FMT_HEADER_ONLY)
 endif()
 
+if (NOT TARGET glucose)
+  add_library(glucose INTERFACE)
+  target_include_directories(glucose INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/glucose/include)
+endif()
+
 if (NOT TARGET kitty)
   add_library(kitty INTERFACE) # v0.4
   target_include_directories(kitty INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/kitty)
@@ -63,6 +68,7 @@ endif()
 if (NOT TARGET easy)
   add_library(easy INTERFACE)
   target_include_directories(easy INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/easy)
+  target_link_libraries(easy INTERFACE glucose)
 endif()
 
 if (NOT TARGET tweedledum)

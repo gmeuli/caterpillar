@@ -16,6 +16,7 @@
 #include <kitty/operations.hpp>
 #include <kitty/print.hpp>
 #include <kitty/spectral.hpp>
+#include <easy/esop/constructors.hpp>
 #include <vector>
 
 namespace tweedledum {
@@ -169,6 +170,46 @@ struct stg_from_spectrum {
 	}
 
 	stg_from_spectrum_params ps_{};
+};
+
+struct stg_from_exact_synthesis
+{
+  template<class Network>
+  void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<uint32_t> const& qubit_map ) const
+  {
+    const auto num_controls = function.num_vars();
+    assert( qubit_map.size() == std::size_t( num_controls ) + 1u );
+
+    /* synthesize ESOP */
+    easy::esop::helliwell_maxsat_statistics stats;
+    easy::esop::helliwell_maxsat_params ps;
+    auto const& esop = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function );
+
+    std::vector<uint32_t> target = {qubit_map.back()};
+    for (auto const& cube : esop )
+    {
+      std::vector<uint32_t> controls, negations;
+      auto bits = cube._bits;
+      auto mask = cube._mask;
+      for (auto v = 0; v < num_controls; ++v) {
+        if (mask & 1) {
+          controls.push_back(qubit_map[v]);
+          if (!(bits & 1)) {
+            negations.push_back(qubit_map[v]);
+          }
+        }
+        bits >>= 1;
+        mask >>= 1;
+      }
+      for (auto n : negations) {
+        net.add_gate(gate_kinds_t::cx, n);
+      }
+      net.add_gate(gate_kinds_t::mcx, controls, target);
+      for (auto n : negations) {
+        net.add_gate(gate_kinds_t::cx, n);
+      }
+    }
+  }
 };
 
 } /* namespace tweedledum */

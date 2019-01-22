@@ -174,6 +174,12 @@ struct stg_from_spectrum {
 
 struct stg_from_exact_synthesis
 {
+public:
+  explicit stg_from_exact_synthesis( std::function<int(kitty::cube)> const& cost_fn = []( kitty::cube const& cube ){ return 1; } )
+    : cost_fn( cost_fn )
+  {
+  }
+
   template<class Network>
   void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<uint32_t> const& qubit_map ) const
   {
@@ -183,7 +189,7 @@ struct stg_from_exact_synthesis
     /* synthesize ESOP */
     easy::esop::helliwell_maxsat_statistics stats;
     easy::esop::helliwell_maxsat_params ps;
-    auto const& esop = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function );
+    auto const& esop = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function, cost_fn );
 
     std::vector<uint32_t> target = {qubit_map.back()};
     for (auto const& cube : esop )
@@ -210,6 +216,9 @@ struct stg_from_exact_synthesis
       }
     }
   }
+
+protected:
+  std::function<int(kitty::cube)> const& cost_fn;  
 };
 
 } /* namespace tweedledum */

@@ -5,6 +5,7 @@
 | Author(s): Giulia Meuli
 *-----------------------------------------------------------------------------*/
 #pragma once
+#include "mapping_strategies.hpp"
 
 #include <array>
 #include <cstdint>
@@ -21,7 +22,6 @@
 #include <variant>
 #include <vector>
 
-#include "mapping_strategies.hpp"
 
 namespace caterpillar
 {

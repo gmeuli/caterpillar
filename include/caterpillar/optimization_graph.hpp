@@ -10,7 +10,7 @@
 #include <kitty/cube.hpp>
 #include <vector>
 
-namespace tweedledum {
+namespace caterpillar {
 inline int count_set(const uint16_t bits)
 {
 	return __builtin_popcount(bits);
@@ -202,4 +202,4 @@ public:
 		}
 	}
 };
-} // namespace tweedledum
+} 

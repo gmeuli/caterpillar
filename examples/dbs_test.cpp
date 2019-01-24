@@ -1,14 +1,15 @@
-#include <tweedledum/algorithms/mapping/relative_phase.hpp>
-#include <tweedledum/algorithms/synthesis/decomposition_based.hpp>
-#include <tweedledum/algorithms/synthesis/single_target_gates.hpp>
+#include <tweedledum/algorithms/decomposition/dt.hpp>
+#include <tweedledum/algorithms/synthesis/dbs.hpp>
+#include <tweedledum/algorithms/synthesis/stg.hpp>
 #include <tweedledum/gates/mcmt_gate.hpp>
 #include <mockturtle/utils/stopwatch.hpp>
 #include <vector>
 #include <map>
+#include <caterpillar/stg_to_mcx.hpp>
 
 using namespace tweedledum;
 using namespace mockturtle;
-
+using namespace caterpillar;
 struct stats
 {
   stopwatch<>::duration total_time{0};
@@ -44,8 +45,8 @@ void run_dbs_with_strategy( std::vector<uint16_t> perm, SynthesisFn const& synth
     };
 
     stopwatch t( st.total_time );
-    auto const stg_circ = tweedledum::decomposition_based_synthesis<Ntk>( perm, synth_fn );
-    auto const q_circ = tweedledum::relative_phase_mapping<Ntk>( stg_circ );
+    auto const stg_circ = tweedledum::dbs<Ntk>( perm, synth_fn );
+    auto const q_circ = tweedledum::dt_decomposition<Ntk>( stg_circ );
 
     st.num_gates = q_circ.num_gates();
     st.num_qubits = q_circ.num_qubits();
@@ -102,13 +103,13 @@ int main( int argc, char** argv )
 
     run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pprm(), "PPRM" );
     run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pkrm(), "PKRM" );
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis(), "EXACT(unit)" );
+    run_dbs_with_strategy<netlist_t>( val, stg_from_exact_synthesis(), "EXACT(unit)" );
 
     if ( key == "prime6" )
       continue;
 
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( lit_cost ), "EXACT(lit)" );
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( complex_cost ), "EXACT(complex)" );
+    run_dbs_with_strategy<netlist_t>( val, stg_from_exact_synthesis( lit_cost ), "EXACT(lit)" );
+    run_dbs_with_strategy<netlist_t>( val, stg_from_exact_synthesis( complex_cost ), "EXACT(complex)" );
   }
 
   return 0;

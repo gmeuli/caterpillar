@@ -5,8 +5,7 @@
 *------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "gray_synth.hpp"
-#include "lin_comb_synth.hpp"
+
 #include "optimization_graph.hpp"
 
 #include <cstdint>
@@ -17,9 +16,14 @@
 #include <kitty/operations.hpp>
 #include <kitty/print.hpp>
 #include <kitty/spectral.hpp>
+#include <tweedledum/algorithms/synthesis/gray_synth.hpp>
+#include <tweedledum/algorithms/synthesis/lin_comb_synth.hpp>
+
 #include <vector>
 
-namespace tweedledum {
+namespace caterpillar {
+
+namespace td = tweedledum;
 
 struct Control {
 	uint32_t bit;
@@ -31,7 +35,7 @@ struct Control {
 };
 
 template<class Network>
-void add_gate_with_neg_contr(Network& net, gate_kinds_t gate_type, std::vector<Control> controls,
+void add_gate_with_neg_contr(Network& net, td::gate_kinds_t gate_type, std::vector<Control> controls,
                              std::vector<uint32_t> target)
 {
 	std::vector<uint32_t> control_lines;
@@ -44,12 +48,12 @@ void add_gate_with_neg_contr(Network& net, gate_kinds_t gate_type, std::vector<C
 	}
 
 	for (auto n : negation_targets)
-		net.add_gate(gate_kinds_t::pauli_x, n);
+		net.add_gate(td::gate_kinds_t::pauli_x, n);
 
 	net.add_gate(gate_type, control_lines, target);
 
 	for (auto n : negation_targets)
-		net.add_gate(gate_kinds_t::pauli_x, n);
+		net.add_gate(td::gate_kinds_t::pauli_x, n);
 }
 
 template<class Network>
@@ -71,7 +75,7 @@ void from_cube_to_toffoli(Network& net, const kitty::cube& cube,
 		mask >>= 1;
 	}
 
-	add_gate_with_neg_contr(net, gate_kinds_t::mcx, controls, target);
+	add_gate_with_neg_contr(net, td::gate_kinds_t::mcx, controls, target);
 }
 
 template<class Network>
@@ -101,11 +105,11 @@ void add_equivalent_to_net_property1(Network& net, const kitty::cube& a, const k
 		to_create = to_create >> 1;
 	}
 
-	add_gate_with_neg_contr(net, gate_kinds_t::mcx, controls, target);
+	add_gate_with_neg_contr(net, td::gate_kinds_t::mcx, controls, target);
 
 	from_cube_to_toffoli(net, one_cube, qubit_map);
 
-	add_gate_with_neg_contr(net, gate_kinds_t::mcx, controls, target);
+	add_gate_with_neg_contr(net, td::gate_kinds_t::mcx, controls, target);
 }
 
 template<class Network>
@@ -149,12 +153,12 @@ void add_equivalent_to_net_property2(Network& net, const kitty::cube& a, const k
 		}
 
 		for (auto target : cnot_targets)
-			net.add_gate(gate_kinds_t::mcx, cnot_control, {target});
+			net.add_gate(td::gate_kinds_t::mcx, cnot_control, {target});
 
-		add_gate_with_neg_contr(net, gate_kinds_t::mcx, common_controls, common_target);
+		add_gate_with_neg_contr(net, td::gate_kinds_t::mcx, common_controls, common_target);
 
 		for (auto target : cnot_targets)
-			net.add_gate(gate_kinds_t::mcx, cnot_control, {target});
+			net.add_gate(td::gate_kinds_t::mcx, cnot_control, {target});
 	}
 }
 
@@ -189,4 +193,4 @@ void opt_stg_from_esop(Network& net, optimized_esop o_esop, std::vector<uint32_t
 	}
 }
 
-} /* namespace tweedledum */
+} 

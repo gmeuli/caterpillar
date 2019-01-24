@@ -5,40 +5,42 @@
 *------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "../gates/gate_kinds.hpp"
-
-#include <string>
-#include <vector>
+static_assert(false, "file interface.hpp cannot be included, it's only used for documentation");
 
 namespace tweedledum {
 
-static_assert(false,
-              "file networks/interface.hpp cannot be included, it's only used for documentation");
-
+template<typename G>
 class network final {
+public:
 #pragma region Types and constructors
+	/*! \brief Type referring to itself.
+	 *
+	 * The ``base_type`` is the network type itself. It is required, because views may extend
+	 * networks, and this type provides a way to determine the underlying network type.
+	 */
+	using base_type = network;
+
+	/*! \brief Type representing a gate.
+	 *
+	 * A ``Gate`` is an operation that can be applied to a collection of qubits. It could be a
+	 * meta operation, such as, primary input and a primary output, or a unitary operation gate.
+	 */
+	using gate_type = G;
+
 	/*! \brief Type representing a node.
 	 *
-	 * A ``node`` is a node in the network. It could be a input, a output or a quantum operator.
+	 * A ``node`` is a node in the network. Each node must contains a gate.
 	 */
-	struct node {};
-
-	/*! \brief Type representing a pointer to a node.
-	 *
-	 * A ``node_ptr`` can be seen as a pointer to a node, or an outgoing edge of a node towards
-	 * its parents, or a parent towards its children. Depending on the kind of network, it may
-	 * carry additional information.
-	 */
-	struct node_ptr {};
+	struct node_type {};
 
 	/*! \brief Type representing the storage.
 	 *
 	 * A ``storage`` is some container that can contain all data necessary to store the network.
 	 * It can constructed outside of the network and passed as a reference to the constructor.
 	 * It may be shared among several networks. A `std::shared_ptr<T>` is a convenient data
-	 * structure to hold a storage in a network.
+	 * structure to hold a storage.
 	 */
-	struct storage {};
+	struct storage_type {};
 
 	network();
 
@@ -46,117 +48,122 @@ class network final {
 #pragma endregion
 
 #pragma region I / O and ancillae qubits
-	/*! \brief Creates a qubit in the network.
-	 *
-	 * Each created qubit creates two nodes (input and ouput) and both
-	 * contributes to the size of the network. A
+	/*! \brief Creates a labeled qubit in the network and returns its ``qid``
+	 */
+	auto add_qubit(std::string const& qlabel);
+
+	/*! \brief Creates a unlabeled qubit in the network and returns its ``qid``
+	 * 
+	 * Since all qubits in a network must be labeled, this function will create
+	 * a generic label with the form: qN, where N is the ``qid``.
 	 */
 	auto add_qubit();
 
-	/*! \brief Creates a labeled qubit in the network.
-	 *
-	 * Each created qubit creates two nodes (input and ouput) and both contributes to the size
-	 * of the network.
-	 *
-	 * \param qubit_label Optional name for the qubit
-	 *
-	 * If a label is not provided, one will be generated.
-	 */
-	auto add_qubit(std::string const& qubit_label = {});
 #pragma endregion
 
 #pragma region Structural properties
-	/*! \brief Returns the number of nodes (including qubits). */
-	auto size() const;
+	/*! \brief Returns the number of nodes. */
+	uint32_t size() const;
 
 	/*! \brief Returns the number of qubits. */
-	auto num_qubits() const;
+	uint32_t num_qubits() const;
 
-	/*! \brief Returns the number of gates. */
-	auto num_gates() const;
+	/*! \brief Returns the number of gates, i.e., nodes that hold unitary operations */
+	uint32_t num_gates() const;
 #pragma endregion
 
-#pragma region Nodes
-	/*! \brief Get the node a node_ptr is pointing to. */
-	auto& get_node(node_ptr node_ptr) const;
+#pragma region Add gates(qids)
+	/*! \brief Add a gate to the network. */
+	// This assumes the gate have been properly rewired
+	node_type& add_gate(gate_type const& gate);
 
-	/*! \brief Returns the index of a node.
-	 *
-	 * The index of a node must be a unique for each node and must be between 0 (inclusive) and
-	 * the size of a network (exclusive, value returned by ``size()``).
-	 */
-	auto node_to_index(node const& node) const;
+	/*! \brief Add a gate to the network. */
+	node_type& add_gate(operation op, uint32_t qid_target, angle rotation_angle = 0.0);
 
-	auto get_children(node const& node, uint32_t qubit_id);
+	/*! \brief Add a gate to the network. */
+	node_type& add_gate(operation op, uint32_t qid_control, uint32_t qid_target,
+	                    angle rotation_angle = 0.0);
 
-	auto get_predecessor_choices(node const& node);
+	/*! \brief Add a gate to the network. */
+	node_type& add_gate(operation op, std::vector<uint32_t> const& qids_control,
+	                    std::vector<uint32_t> const& qids_target, angle rotation_angle = 0.0);
 #pragma endregion
 
-#pragma region Add gates
-	auto& add_gate(gate g);
+#pragma region Rewiring
+	void rewire(std::vector<uint32_t> const& rewiring_map)
+	{
+		storage_->rewiring_map = rewiring_map;
+	}
 
-	auto& add_gate(gate_kinds_t kind, uint32_t target, float rotation_angle = 0.0);
+	void rewire(std::vector<std::pair<uint32_t, uint32_t>> const& transpositions)
+	{
+		for (auto&& [i, j] : transpositions) {
+			std::swap(storage_->rewiring_map[i], storage_->rewiring_map[j]);
+		}
+	}
 
-	auto& add_gate(gate_kinds_t kind, uint32_t control, uint32_t target, float rotation_angle = 0.0);
-
-	auto& add_gate(gate_kinds_t kind, std::vector<uint32_t> const& controls,
-	               std::vector<uint32_t> const& targets, float rotation_angle = 0.0);
-
-	auto& add_gate(gate_kinds_t kind, std::string const& target, float rotation_angle = 0.0);
-
-	auto& add_gate(gate_kinds_t kind, std::vector<std::string> const& controls,
-	               std::vector<std::string> const& targets, float rotation_angle = 0.0);
+	constexpr auto rewire_map() const
+	{
+		return storage_->rewiring_map;
+	}
 #pragma endregion
 
-#pragma region Const node iterators
-	template<typename Fn>
-	void foreach_qubit(Fn&& fn) const;
-
-	template<typename Fn>
-	void foreach_input(Fn&& fn) const;
-
-	template<typename Fn>
-	void foreach_output(Fn&& fn) const;
-
-	/*! \brief Calls ``fn`` on every node in network.
+#pragma region Const iterators
+	/*! \brief Calls ``fn`` on every qubit in the network.
 	 *
-	 * The order of nodes depends on the implementation and must not guarantee
-	 * topological order.  The paramater ``fn`` is any callable that must have
-	 * one of the following four signatures.
-	 * - ``void(node const&)``
-	 * - ``void(node const&, uint32_t)``
-	 * - ``bool(node const&)``
-	 * - ``bool(node const&, uint32_t)``
-	 *
-	 * If ``fn`` has two parameters, the second parameter is an index starting
-	 * from 0 and incremented in every iteration.  If ``fn`` returns a ``bool``,
-	 * then it can interrupt the iteration by returning ``false``.
+	 * The paramater ``fn`` is any callable that must have one of the following three signatures.
+	 * - ``void(uint32_t qid)``
+	 * - ``void(string const& qlabel)``
+	 * - ``void(uint32_t qid, string const& qlabel)``
 	 */
 	template<typename Fn>
-	void foreach_node(Fn&& fn) const;
+	void foreach_cqubit(Fn&& fn) const;
 
+	/*! \brief Calls ``fn`` on every input node in the network.
+	 *
+	 * The paramater ``fn`` is any callable that must have one of the following two signatures.
+	 * - ``void(node_type const& node)``
+	 * - ``void(node_type const& node, uint32_t node_index)``
+	 */
 	template<typename Fn>
-	void foreach_gate(Fn&& fn) const;
+	void foreach_cinput(Fn&& fn) const;
 
+	/*! \brief Calls ``fn`` on every output node in the network.
+	 *
+	 * The paramater ``fn`` is any callable that must have one of the following two signatures.
+	 * - ``void(node_type const& node)``
+	 * - ``void(node_type const& node, uint32_t node_index)``
+	 */
 	template<typename Fn>
-	void foreach_child(node const& n, Fn&& fn) const;
+	void foreach_coutput(Fn&& fn) cons;
 
+	/*! \brief Calls ``fn`` on every unitrary gate node in the network.
+	 *
+	 * The paramater ``fn`` is any callable that must have one of the following four signatures.
+	 * - ``void(node_type const& node)``
+	 * - ``void(node_type const& node, uint32_t node_index)``
+	 * - ``bool(node_type const& node)``
+	 * - ``bool(node_type const& node, uint32_t node_index)``
+	 *
+	 * If ``fn`` returns a ``bool``, then it can interrupt the iteration by returning ``false``.
+	 */
 	template<typename Fn>
-	void foreach_child(node const& n, uint32_t qubit_id, Fn&& fn) const;
+	void foreach_cgate(Fn&& fn) const;
+
+	/*! \brief Calls ``fn`` on every node in the network.
+	 *
+	 * The paramater ``fn`` is any callable that must have one of the following four signatures.
+	 * - ``void(node_type const& node)``
+	 * - ``void(node_type const& node, uint32_t node_index)``
+	 * - ``bool(node_type const& node)``
+	 * - ``bool(node_type const& node, uint32_t node_index)``
+	 *
+	 * If ``fn`` returns a ``bool``, then it can interrupt the iteration by returning ``false``.
+	 */
+	template<typename Fn>
+	void foreach_cnode(Fn&& fn) const;
 #pragma endregion
 
-#pragma region Visited flags
-	/*! \brief Reset all mark values to 0. */
-	void clear_marks();
-
-	/*! \brief Returns the marked value of a node. */
-	auto mark(node const& node) const;
-
-	/*! \brief Sets the marked value of a node. */
-	void mark(node const& node, uint8_t value);
-
-	void default_mark(std::uint8_t value);
-#pragma endregion
 };
 
 } // namespace tweedledum

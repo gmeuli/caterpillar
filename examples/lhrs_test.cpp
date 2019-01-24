@@ -13,7 +13,7 @@
 #include <mockturtle/generators/arithmetic.hpp>
 #include <mockturtle/views/mapping_view.hpp>
 
-#include <tweedledum/networks/gg_network.hpp>
+#include <tweedledum/networks/netlist.hpp>
 #include <tweedledum/gates/mcst_gate.hpp>
 
 
@@ -24,7 +24,7 @@ int main( int argc, char** argv )
   namespace td = tweedledum;
 
   mc::aig_network aig;
-  td::gg_network<td::mcst_gate> qnet;
+  td::netlist<td::mcst_gate> qnet;
 
   const auto a = aig.create_pi();
   const auto b = aig.create_pi();

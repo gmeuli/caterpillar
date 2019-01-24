@@ -1,72 +1,79 @@
-/*-------------------------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
 | Author(s): Bruno Schmitt
-*------------------------------------------------------------------------------------------------*/
+*-------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "gate_kinds.hpp"
+#include "../networks/qubit.hpp"
+#include "gate_base.hpp"
+#include "gate_set.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
-#include <list>
-#include <stack>
+#include <type_traits>
 #include <vector>
-#include <kitty/detail/mscfix.hpp>
 
 namespace tweedledum {
 
-/*! \brief Multiple Control Multiple Target reversible gate.
+/*! \brief Multiple Control Multiple Target reversible gate
  *
- * This gate type needs the network itself to have a maximum number o qubits of 32 (need to figure
- * out how to do this)
+ * This class represents a gate which can act upon up to 32 qubits of a quantum network. This gate
+ * type needs the network itself to have a maximum number o qubits of 32 (need to figure out how to
+ * do this).
  */
-class mcmt_gate {
+class mcmt_gate final : public gate_base {
 public:
 #pragma region Constants
-	static constexpr uint32_t max_num_qubits = 32u;
-	static constexpr uint32_t network_max_num_qubits = 32u;
+	constexpr static auto max_num_qubits = 32u;
+	constexpr static auto network_max_num_qubits = 32u;
 #pragma endregion
 
 #pragma region Constructors
-	mcmt_gate(gate_kinds_t kind, uint32_t target, float rotation_angle = 0.0)
-	    : kind_(static_cast<uint32_t>(kind))
+	mcmt_gate(gate_base const& op, qubit_id target)
+	    : gate_base(op)
 	    , controls_(0)
+	    , polarity_(0)
 	    , targets_(0)
-	    , rotation_angle_(rotation_angle)
 	{
-		assert(target <= 32);
+		assert(is_single_qubit());
+		assert(target <= network_max_num_qubits);
 		targets_ |= (1 << target);
 	}
 
-	mcmt_gate(gate_kinds_t kind, uint32_t control, uint32_t target, float rotation_angle = 0.0)
-	    : kind_(static_cast<uint32_t>(kind))
+	mcmt_gate(gate_base const& op, qubit_id control, qubit_id target)
+	    : gate_base(op)
 	    , controls_(0)
+	    , polarity_(0)
 	    , targets_(0)
-	    , rotation_angle_(rotation_angle)
 	{
-		assert(target <= 32);
-		assert(control <= 32);
-		targets_ |= (1 << target);
+		assert(is_double_qubit());
+		assert(control <= network_max_num_qubits);
+		assert(target <= network_max_num_qubits);
+		assert(control != target);
 		controls_ |= (1 << control);
+		targets_ |= (1 << target);
+		polarity_ |= (control.is_complemented() << control.index());
 	}
 
-	mcmt_gate(gate_kinds_t kind, std::vector<uint32_t> controls, std::vector<uint32_t> targets,
-	          float rotation_angle = 0.0)
-	    : kind_(static_cast<uint32_t>(kind))
+	mcmt_gate(gate_base const& op, std::vector<qubit_id> const& controls,
+	          std::vector<qubit_id> const& target)
+	    : gate_base(op)
 	    , controls_(0)
+	    , polarity_(0)
 	    , targets_(0)
-	    , rotation_angle_(rotation_angle)
 	{
-		assert(controls.size() >= 0 && controls.size() <= 32);
-		assert(targets.size() > 0 && targets.size() <= 32);
+		assert(controls.size() <= max_num_qubits);
+		assert(target.size() > 0 && target.size() <= max_num_qubits);
 		for (auto control : controls) {
-			assert(control <= 32u);
+			assert(control <= network_max_num_qubits);
 			controls_ |= (1u << control);
+			polarity_ |= (control.is_complemented() << control.index());
 		}
-		for (auto target : targets) {
-			assert(target <= 32u);
+		for (auto target : target) {
+			assert(target <= network_max_num_qubits);
 			targets_ |= (1u << target);
 		}
 		assert((targets_ & controls_) == 0u);
@@ -74,74 +81,49 @@ public:
 #pragma endregion
 
 #pragma region Properties
-	auto num_controls() const
+	uint32_t num_controls() const
 	{
+		assert(!is_meta());
 		return __builtin_popcount(controls_);
 	}
 
-	auto num_targets() const
+	constexpr auto num_targets() const
 	{
+		assert(!is_meta());
 		return __builtin_popcount(targets_);
-	}
-
-	auto kind() const
-	{
-		return static_cast<gate_kinds_t>(kind_);
-	}
-
-	bool is(gate_kinds_t kind) const
-	{
-		return kind_ == static_cast<uint32_t>(kind);
-	}
-
-	bool is_dependent(mcmt_gate const& other) const
-	{
-		return ((controls_ & other.targets_) != 0);
-	}
-
-	auto is_control(uint32_t qubit_id) const
-	{
-		return (controls_ & (1u << qubit_id));
-	}
-
-	auto rotation_angle() const
-	{
-		return rotation_angle_;
-	}
-
-	auto qubit_index(uint32_t qubit_id) const
-	{
-		return qubit_id;
 	}
 #pragma endregion
 
-#pragma region Iterators
+#pragma region Const iterators
 	template<typename Fn>
-	void foreach_target(Fn&& fn) const
+	void foreach_control(Fn&& fn) const
 	{
-		for (auto i = targets_, qid = 0u; i; i >>= 1, ++qid) {
+		for (auto i = controls_, id = 0u, p = polarity_; i; i >>= 1, ++id, p >>= 1) {
 			if (i & 1) {
-				fn(qid);
+				fn(qubit_id(id, (p & 1)));
 			}
 		}
 	}
 
 	template<typename Fn>
-	void foreach_control(Fn&& fn) const
+	void foreach_target(Fn&& fn) const
 	{
-		for (auto i = controls_, qid = 0u; i; i >>= 1, ++qid) {
+		assert(!is_meta());
+		for (auto i = targets_, id = 0u; i; i >>= 1, ++id) {
 			if (i & 1) {
-				fn(qid);
+				fn(qubit_id(id, 0));
 			}
 		}
 	}
 #pragma endregion
 
 private:
-	uint32_t kind_;
+	/*! \brief bitmap which indicates which qubits in the network are the controls. */
 	uint32_t controls_;
+	/*! \brief bitmap which indicates the controls' polarities. */
+	uint32_t polarity_;
+	/*! \brief bitmap which indicates which qubits in the network are the targets. */
 	uint32_t targets_;
-	float rotation_angle_;
 };
 
 } // namespace tweedledum

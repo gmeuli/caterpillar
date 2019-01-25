@@ -1,7 +1,7 @@
 
 
 # caterpillar
-
+<img src="https://user-images.githubusercontent.com/37411238/51745329-be3d7400-20a2-11e9-9ac5-d5e15602ec7b.png" width="64" height="64" align="left" style="margin-right: 12pt" />
 caterpillar is a C++-17 logic network library.  It provides several LUT-based methods for the for quantum compilation.
 
 

@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,53 +24,67 @@
  */
 
 /*!
-  \file akers.hpp
-  \brief Resynthesis with Akers synthesis
+  \file sorting.hpp
+  \brief Generate sorting networks
 
   \author Mathias Soeken
-  \author Eleonora Testa
 */
 
 #pragma once
 
-#include <iostream>
-#include <sstream>
-#include <unordered_map>
-#include <vector>
-
-#include <kitty/dynamic_truth_table.hpp>
-#include <kitty/operators.hpp>
-
-#include "../../algorithms/akers_synthesis.hpp"
+#include <cstdint>
 
 namespace mockturtle
 {
 
-/*! \brief Resynthesis function based on Akers synthesis.
+/*! \brief Generates sorting network based on bubble sort.
  *
- * This resynthesis function can be passed to ``node_resynthesis``,
- * ``cut_rewriting``, and ``refactoring``.
+ * The functor is called for every comparator in the network.  The arguments
+ * to the functor are two integers that define on which lines the comparator
+ * acts.
  *
-   \verbatim embed:rst
-  
-   Example
-   
-   .. code-block:: c++
-   
-      const klut_network klut = ...;
-      akers_resynthesis<mig_network> resyn;
-      const auto mig = node_resynthesis<mig_network>( klut, resyn );
-   \endverbatim
+ * \param n Number of elements to sort
+ * \param compare_fn Functor
  */
-template<class Ntk>
-class akers_resynthesis
+template<class Fn>
+void bubble_sorting_network( uint32_t n, Fn&& compare_fn )
 {
-public:
-  template<typename LeavesIterator, typename Fn>
-  void operator()( Ntk& ntk, kitty::dynamic_truth_table const& function, LeavesIterator begin, LeavesIterator end, Fn&& fn )
+  if ( n <= 1 )
   {
-    fn( akers_synthesis<Ntk>( ntk, function, ~function.construct(), begin, end ) );
+    return;
   }
-};
+  for ( auto c = n - 1; c >= 1; --c )
+  {
+    for ( auto j = 0u; j < c; ++j )
+    {
+      compare_fn( j, j + 1 );
+    }
+  }
+}
 
-} /* namespace mockturtle */
+/*! \brief Generates sorting network based on insertion sort.
+ *
+ * The functor is called for every comparator in the network.  The arguments
+ * to the functor are two integers that define on which lines the comparator
+ * acts.
+ *
+ * \param n Number of elements to sort
+ * \param compare_fn Functor
+ */
+template<class Fn>
+void insertion_sorting_network( uint32_t n, Fn&& compare_fn )
+{
+  if ( n <= 1 )
+  {
+    return;
+  }
+  for ( auto c = 1u; c < n; ++c )
+  {
+    for ( int j = c - 1; j >= 0; --j )
+    {
+      compare_fn( j, j + 1 );
+    }
+  }
+}
+
+} // namespace mockturtle

@@ -24,21 +24,25 @@
  */
 
 /*!
-  \file common.hpp
-  \brief Common data structures.
+  \file verilog_regex.hpp
+  \brief Regular expressions used by the Verilog parser.
 
   \author Heinz Riener
 */
 
 #pragma once
 
+#include <regex>
+
 namespace lorina
 {
 
-enum class return_code
+namespace verilog_regex
 {
-  success = 0,
-  parse_error,
-};
+static std::regex immediate_assign( R"(^(~)?([[:alnum:]\[\]_']+)$)" );
+static std::regex binary_expression( R"(^(~)?([[:alnum:]\[\]_']+)([&|^])(~)?([[:alnum:]\[\]_']+)$)" );
+static std::regex ternary_expression( R"(^(~)?([[:alnum:]\[\]_']+)([&|^])(~)?([[:alnum:]\[\]_']+)([&|^])(~)?([[:alnum:]\[\]_']+)$)" );
+static std::regex maj3_expression( R"(^\((~)?([[:alnum:]\[\]_']+)&(~)?([[:alnum:]\[\]_']+)\)\|\((~)?([[:alnum:]\[\]_']+)&(~)?([[:alnum:]\[\]_']+)\)\|\((~)?([[:alnum:]\[\]_']+)&(~)?([[:alnum:]\[\]_']+)\)$)" );
+} // namespace verilog_regex
 
 } // namespace lorina

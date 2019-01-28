@@ -1,4 +1,4 @@
-/* lorina: C++ parsing library
+/* mockturtle: C++ logic network library
  * Copyright (C) 2018  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
@@ -24,21 +24,42 @@
  */
 
 /*!
-  \file common.hpp
-  \brief Common data structures.
-
-  \author Heinz Riener
+  \file events.hpp
+  \brief Event API for updating a logic network.
+  \author Mathias Soeken
 */
 
 #pragma once
 
-namespace lorina
+#include <functional>
+#include <vector>
+
+#include "../traits.hpp"
+
+namespace mockturtle
 {
 
-enum class return_code
+/*! \brief Network events.
+ *
+ * This data structure can be returned by a network.  Clients can add functions
+ * to network events to call code whenever an event occurs.  Events are adding
+ * a node, modifying a node, and deleting a node.
+ */
+template<class Ntk>
+struct network_events
 {
-  success = 0,
-  parse_error,
+  /*! \brief Event when node `n` is added. */
+  std::vector<std::function<void( node<Ntk> const& n )>> on_add;
+
+  /*! \brief Event when `n` is modified.
+   *
+   * The event also informs about the previous children.  Note that the new
+   * children are already available at the time the event is triggered.
+   */
+  std::vector<std::function<void( node<Ntk> const& n, std::vector<signal<Ntk>> const& previous_children )>> on_modified;
+
+  /*! \brief Event when `n` is deleted. */
+  std::vector<std::function<void( node<Ntk> const& n )>> on_delete;
 };
 
-} // namespace lorina
+} // namespace mockturtle

@@ -59,7 +59,7 @@ if (NOT TARGET percy)
   target_link_libraries(percy INTERFACE libabcsat)
 endif()
 
-if (NOT TARGET mockturtle)
+if (NOT TARGET mockturtle) # spectral c2e4149
   add_library(mockturtle INTERFACE)
   target_include_directories(mockturtle INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mockturtle)
   target_link_libraries(mockturtle INTERFACE ez kitty lorina sparsepp percy)

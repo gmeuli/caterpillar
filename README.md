@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/gmeuli/caterpillar.svg?token=DiDrPCoZ4z6fZ8AyMtUC&branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <img src="https://user-images.githubusercontent.com/37411238/51745329-be3d7400-20a2-11e9-9ac5-d5e15602ec7b.png" width="64" height="64" align="left" style="margin-right: 12pt" />
@@ -41,7 +42,7 @@ if(lutn) caterpillar::logic_network_synthesis( rev_net, *lutn, tweedledum::stg_f
 
 ## Installation requirements
 
-A modern compiler is required to build *mockturtle*.  We are continously
+A modern compiler is required to build *caterpillar*.  We are continously
 testing with Clang 6.0.1, GCC 7.3.0, and GCC 8.2.0.
 
 ## EPFL logic sythesis libraries

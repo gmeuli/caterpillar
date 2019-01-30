@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithms>
 
 namespace tweedledum {
 

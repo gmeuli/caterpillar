@@ -76,7 +76,7 @@ public:
 			assert(target <= network_max_num_qubits);
 			targets_ |= (1u << target);
 		}
-		assert((targets_ & controls_) == 0u);
+		//assert((targets_ & controls_) == 0u);
 	}
 #pragma endregion
 

@@ -1,6 +1,11 @@
 build/
+examples/
 build-*/
 .vscode/
+
+# Bench
+*.aig
+
 
 
 # Prerequisites

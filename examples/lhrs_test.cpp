@@ -15,6 +15,7 @@
 
 #include <tweedledum/networks/netlist.hpp>
 #include <tweedledum/gates/mcst_gate.hpp>
+#include <tweedledum/io/write_cirq.hpp>
 
 
 int main( int argc, char** argv )
@@ -43,5 +44,7 @@ int main( int argc, char** argv )
 
   if(lutn) logic_network_synthesis( qnet, *lutn, td::stg_from_pkrm());
   
+  td::write_cirq(qnet, std::cout);
+
   return 0;
 }

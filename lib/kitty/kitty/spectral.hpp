@@ -45,6 +45,7 @@
 #include <iomanip>
 #include <iostream>
 #include <unordered_map>
+#include <cassert>
 
 namespace kitty
 {

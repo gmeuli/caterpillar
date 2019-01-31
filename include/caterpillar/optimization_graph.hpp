@@ -10,6 +10,28 @@
 #include <kitty/cube.hpp>
 #include <vector>
 
+namespace caterpillar::detail
+{
+	int t_cost(const int tof_controls, const int lines)
+	{
+		switch (tof_controls) {
+		case 0u:
+		case 1u:
+			return 0;
+
+		case 2u:
+			return 7;
+
+		default:
+			if (lines - tof_controls - 1 >= (tof_controls - 1) / 2) {
+				return 8 * (tof_controls - 1);
+			} else {
+				return 16 * (tof_controls - 1);
+			}
+		}
+	}
+}
+
 namespace caterpillar {
 inline int count_set(const uint16_t bits)
 {
@@ -78,24 +100,6 @@ class optimization_graph {
 	std::vector<edge> edges;
 	int num_var;
 
-	int t_cost(const int tof_controls, const int lines)
-	{
-		switch (tof_controls) {
-		case 0u:
-		case 1u:
-			return 0;
-
-		case 2u:
-			return 7;
-
-		default:
-			if (lines - tof_controls - 1 >= (tof_controls - 1) / 2) {
-				return 8 * (tof_controls - 1);
-			} else {
-				return 16 * (tof_controls - 1);
-			}
-		}
-	}
 
 	int get_gain_first_property(kitty::cube f, kitty::cube s)
 	{
@@ -106,19 +110,19 @@ class optimization_graph {
 			auto a_notb = f._mask & (~s._mask);
 			auto b_nota = (~f._mask) & s._mask;
 
-			int old_cost = t_cost(f.num_literals(), num_var)
-			               + t_cost(s.num_literals(), num_var);
+			int old_cost = detail::t_cost(f.num_literals(), num_var)
+			               + detail::t_cost(s.num_literals(), num_var);
 			if (count_set(a_notb) == 1) {
 				return old_cost
-				       - (2 * t_cost(count_set(b_nota), num_var)
-				          + t_cost(f.num_literals(), num_var));
+				       - (2 * detail::t_cost(count_set(b_nota), num_var)
+				          + detail::t_cost(f.num_literals(), num_var));
 			}
 
 			if (count_set(b_nota) == 1) {
 
 				return old_cost
-				       - (2 * t_cost(count_set(a_notb), num_var)
-				          + t_cost(s.num_literals(), num_var));
+				       - (2 * detail::t_cost(count_set(a_notb), num_var)
+				          + detail::t_cost(s.num_literals(), num_var));
 			}
 			return 0;
 
@@ -130,8 +134,8 @@ class optimization_graph {
 	{
 		/* same controls but different polarities */
 		if ((f._mask == s._mask) && (f._bits ^ s._bits) != 0) {
-			auto old_cost = 2 * t_cost(f.num_literals(), num_var);
-			return old_cost - (t_cost(f.num_literals() - 1, num_var));
+			auto old_cost = 2 * detail::t_cost(f.num_literals(), num_var);
+			return old_cost - (detail::t_cost(f.num_literals() - 1, num_var));
 		}
 		return 0;
 	}

@@ -36,7 +36,7 @@ public:
 	    , targets_(0)
 	    , rotation_angle_(rotation_angle)
 	{
-		assert(target <= 32);
+		//assert(target <= 32);
 		targets_ |= (1 << target);
 	}
 
@@ -46,8 +46,8 @@ public:
 	    , targets_(0)
 	    , rotation_angle_(rotation_angle)
 	{
-		assert(target <= 32);
-		assert(control <= 32);
+		//assert(target <= 32);
+		//assert(control <= 32);
 		targets_ |= (1 << target);
 		controls_ |= (1 << control);
 	}
@@ -59,17 +59,17 @@ public:
 	    , targets_(0)
 	    , rotation_angle_(rotation_angle)
 	{
-		assert(controls.size() >= 0 && controls.size() <= 32);
-		assert(targets.size() > 0 && targets.size() <= 32);
+		//assert(controls.size() >= 0 && controls.size() <= 32);
+		//assert(targets.size() > 0 && targets.size() <= 32);
 		for (auto control : controls) {
-			assert(control <= 32u);
+			//assert(control <= 32u);
 			controls_ |= (1u << control);
 		}
 		for (auto target : targets) {
-			assert(target <= 32u);
+			//assert(target <= 32u);
 			targets_ |= (1u << target);
 		}
-		assert((targets_ & controls_) == 0u);
+		//assert((targets_ & controls_) == 0u);
 	}
 #pragma endregion
 

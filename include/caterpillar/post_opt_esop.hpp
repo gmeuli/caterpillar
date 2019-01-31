@@ -19,7 +19,7 @@
 #include <kitty/spectral.hpp>
 #include <vector>
 
-namespace tweedledum {
+namespace caterpillar {
 
 struct Control {
 	uint32_t bit;
@@ -29,7 +29,7 @@ struct Control {
 	    , polarity(polarity)
 	{}
 };
-
+using gate_kinds_t = tweedledum::gate_kinds_t;
 template<class Network>
 void add_gate_with_neg_contr(Network& net, gate_kinds_t gate_type, std::vector<Control> controls,
                              std::vector<uint32_t> target)

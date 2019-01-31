@@ -39,7 +39,8 @@ struct stg_from_pprm {
 	                std::vector<uint32_t> const& qubit_map) const
 	{
 		const auto num_controls = function.num_vars();
-		assert(qubit_map.size() >= static_cast<std::size_t>(num_controls) + 1u);
+		assert(qubit_map.size() == static_cast<std::size_t>(num_controls) + 1u);
+
 
 		std::vector<uint32_t> target = {qubit_map.back()};
 		for (auto const& cube : esop_from_pprm(function)) {
@@ -72,7 +73,7 @@ struct stg_from_pkrm {
 	                std::vector<uint32_t> const& qubit_map) const
 	{
 		const auto num_controls = function.num_vars();
-		assert(qubit_map.size() >= static_cast<std::size_t>(num_controls) + 1u);
+		assert(qubit_map.size() == static_cast<std::size_t>(num_controls) + 1u);
 
 		std::vector<uint32_t> target = {qubit_map.back()};
 		for (auto const& cube : esop_from_optimum_pkrm(function)) {
@@ -134,7 +135,7 @@ struct stg_from_spectrum {
 	                std::vector<uint32_t> const& qubit_map) const
 	{
 		const auto num_controls = function.num_vars();
-		assert(qubit_map.size() >= num_controls + 1u);
+		assert(qubit_map.size() == num_controls + 1u);
 
 		auto g = kitty::extend_to(function, num_controls + 1);
 		auto xt = g.construct();
@@ -185,7 +186,6 @@ public:
   {
     const auto num_controls = function.num_vars();
     assert( qubit_map.size() >= std::size_t( num_controls ) + 1u );
-
     /* synthesize ESOP */
     easy::esop::helliwell_maxsat_statistics stats;
     easy::esop::helliwell_maxsat_params ps;

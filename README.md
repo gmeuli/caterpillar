@@ -31,7 +31,7 @@ lorina::read_aiger( "adder.aig", mockturtle::aiger_reader( aig ) );
 
 mockturtle::mapping_view<mockturtle::aig_network, true> mapped_aig{ aig };
 
-mockturtle::lut_mapping(mapped_aig);
+mockturtle::lut_mapping<mockturtle::mapping_view<mockturtle::aig_network, true>, true>(mapped_aig, ps);
 
 auto lutn = mockturtle::collapse_mapped_network<mockturtle::klut_network>( mapped_aig );
 

@@ -20,7 +20,8 @@
 #include <kitty/print.hpp>
 #include <kitty/spectral.hpp>
 #include <tweedledum/algorithms/synthesis/gray_synth.hpp>
-#include <tweedledum/algorithms/synthesis/lin_comb_synth.hpp>
+
+#include <easy/esop/constructors.hpp>
 #include <vector>
 
 namespace caterpillar
@@ -97,11 +98,11 @@ public:
         mask >>= 1;
       }
       for (auto n : negations) {
-        net.add_gate(td::gate_kinds_t::cx, n);
+        net.add_gate(td::gate::cx, n);
       }
-      net.add_gate(td::gate_kinds_t::mcx, controls, target);
+      net.add_gate(td::gate::mcx, controls, target);
       for (auto n : negations) {
-        net.add_gate(td::gate_kinds_t::cx, n);
+        net.add_gate(td::gate::cx, n);
       }
     }
   }

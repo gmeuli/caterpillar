@@ -35,8 +35,8 @@ void run_dbs_with_strategy( std::vector<uint16_t> perm, SynthesisFn const& synth
   {
     auto count_T_gates = [&]( Ntk const& netlist ){
       auto T_number = 0u;
-      netlist.foreach_gate( [&]( const auto& gate ){
-          if ( gate.gate.kind() == tweedledum::gate_kinds_t::t )
+      netlist.foreach_cgate( [&]( const auto& gate ){
+          if ( gate.gate.operation() == tweedledum::gate::t )
           {
             ++T_number;
           }

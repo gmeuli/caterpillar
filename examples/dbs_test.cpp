@@ -2,6 +2,9 @@
 #include <tweedledum/algorithms/synthesis/decomposition_based.hpp>
 #include <tweedledum/algorithms/synthesis/single_target_gates.hpp>
 #include <tweedledum/gates/mcmt_gate.hpp>
+#include <tweedledum/io/print.hpp>
+#include <tweedledum/algorithms/mapping/nct.hpp>
+
 #include <mockturtle/utils/stopwatch.hpp>
 #include <vector>
 #include <map>
@@ -45,7 +48,15 @@ void run_dbs_with_strategy( std::vector<uint16_t> perm, SynthesisFn const& synth
 
     stopwatch t( st.total_time );
     auto const stg_circ = tweedledum::decomposition_based_synthesis<Ntk>( perm, synth_fn );
-    auto const q_circ = tweedledum::relative_phase_mapping<Ntk>( stg_circ );
+    std::cout << tweedledum::to_unicode(stg_circ)<< std::endl;
+
+    tweedledum::nct_mapping_params ps;
+    ps.controls_threshold = 4;
+    auto const dec_stg_circ =  tweedledum::nct_mapping<Ntk>(stg_circ, ps);
+    std::cout << tweedledum::to_unicode(dec_stg_circ)<< std::endl;
+
+    auto const q_circ = tweedledum::relative_phase_mapping<Ntk>( dec_stg_circ );
+    std::cout << tweedledum::to_unicode(q_circ)<< std::endl;
 
     st.num_gates = q_circ.num_gates();
     st.num_qubits = q_circ.num_qubits();
@@ -140,13 +151,15 @@ int main( int argc, char** argv )
   {
     std::cout << BOLD << "[i] benchmark: " << UNDERLINE << key << ENDC << std::endl;
 
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pprm(), "PPRM" );
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pkrm(), "PKRM" );
-    run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis(), "EXACT(unit)" );
-
-    if ( key == "prime6" )
+    if(key == "tof6")
+    {
+      run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pprm(), "PPRM" );
+      run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pkrm(), "PKRM" );
+      run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis(), "EXACT(unit)" );
+    }
+    if ( true )
       continue;
-
+    
     run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( lit_cost ), "EXACT(lit)" );
     run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_exact_synthesis( complex_cost ), "EXACT(complex)" );
   }

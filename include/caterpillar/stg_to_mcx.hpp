@@ -71,7 +71,7 @@ public:
   }
 
   template<class Network>
-  void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<uint32_t> const& qubit_map ) const
+  void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<tweedledum::qubit_id> const& qubit_map ) const
   {
     const auto num_controls = function.num_vars();
     assert( qubit_map.size() == std::size_t( num_controls ) + 1u );

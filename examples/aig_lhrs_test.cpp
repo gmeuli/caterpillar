@@ -9,6 +9,7 @@
 
 #include <caterpillar/lhrs.hpp>
 #include <caterpillar/optimization_graph.hpp>
+#include <caterpillar/stg_to_mcx.hpp>
 
 #include <tweedledum/algorithms/synthesis/stg.hpp>
 #include <tweedledum/gates/mcmt_gate.hpp>
@@ -53,7 +54,7 @@ void run_lhrs_experiment (std::string const& name, SynthesisFn const& syn_fn, st
     auto count_T_gates = [&]( Q_Net const& netlist ){
       auto T_number = 0u;
       netlist.foreach_cgate( [&]( const auto& gate ){
-          if ( gate.gate.operation() == tweedledum::gate::t )
+          if ( gate.gate.operation() == tweedledum::gate_set::t )
           {
             ++T_number;
           }
@@ -64,7 +65,7 @@ void run_lhrs_experiment (std::string const& name, SynthesisFn const& syn_fn, st
 		auto est_T_gates = [&]( Q_Net const& netlist ){
       auto T_number = 0u;
       netlist.foreach_cgate( [&]( const auto& gate ){
-          T_number += caterpillar::detail::t_cost(gate.num_controls(), netlist.size());
+          T_number += caterpillar::detail::t_cost(gate.gate.num_controls(), netlist.size());
         });
       return T_number;
     };
@@ -121,7 +122,7 @@ int main ()
 
 		run_lhrs_experiment( name, tweedledum::stg_from_pprm(), "PPRM" );
 		run_lhrs_experiment( name, tweedledum::stg_from_pkrm(), "PKRM" );
-		run_lhrs_experiment( name, tweedledum::stg_from_exact_synthesis(), "EXACT(unit)" );
+		run_lhrs_experiment( name, caterpillar::stg_from_exact_synthesis(), "EXACT(unit)" );
 
 	}
 	

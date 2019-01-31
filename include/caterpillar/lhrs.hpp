@@ -16,6 +16,7 @@
 #include <mockturtle/views/topo_view.hpp>
 #include <mockturtle/algorithms/cut_enumeration/spectr_cut.hpp>
 #include <stack>
+
 #include <tweedledum/algorithms/synthesis/stg.hpp>
 
 #include <variant>
@@ -289,7 +290,7 @@ private:
       if ( tt == clone )
       {
         const auto controls = get_fanin_as_qubits( node );
-        compute_xor_block( controls, t );
+        compute_xor_block( controls, tweedledum::qubit_id(t) );
       }
       else
       {
@@ -297,7 +298,7 @@ private:
         // controls directly as mapped qubits.  We assume that the inputs cannot
         // be complemented, e.g., in the case of k-LUT networks.
         const auto controls = get_fanin_as_qubits( node );
-        compute_lut( ntk.node_function( node ), controls, t );
+        compute_lut( ntk.node_function( node ), controls, tweedledum::qubit_id(t) );
       }
     }
   }
@@ -345,7 +346,7 @@ private:
     if constexpr ( mt::has_node_function_v<LogicNetwork> )
     {
       const auto controls = get_fanin_as_qubits( node );
-      compute_xor_block( controls, t );
+      compute_xor_block( controls, tweedledum::qubit_id(t) );
     }
   }
 
@@ -418,7 +419,7 @@ private:
       qnet.add_gate( tweedledum::gate::pauli_x, c1 );
   }
 
-  void compute_xor_block( std::vector<uint32_t> const& controls, uint32_t t )
+  void compute_xor_block( std::vector<tweedledum::qubit_id> const& controls, tweedledum::qubit_id t )
   {
     for ( auto c : controls )
     {
@@ -428,7 +429,7 @@ private:
   }
 
   void compute_lut( kitty::dynamic_truth_table const& function,
-                    std::vector<uint32_t> const& controls, uint32_t t )
+                    std::vector<tweedledum::qubit_id> const& controls, tweedledum::qubit_id t )
   {
     auto qubit_map = controls;
     qubit_map.push_back( t );

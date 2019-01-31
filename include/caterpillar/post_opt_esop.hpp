@@ -33,7 +33,7 @@ struct Control {
 	    , polarity(polarity)
 	{}
 };
-using gate_kinds_t = tweedledum::gate_kinds_t;
+
 template<class Network>
 void add_gate_with_neg_contr(Network& net, td::gate_base gate_type, std::vector<Control> controls,
                              std::vector<uint32_t> target)

@@ -5,8 +5,8 @@
 *------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include <caterpillar/optimization_graph.hpp>
-#include <caterpillar/post_opt_esop.hpp>
+#include "../optimization/optimization_graph.hpp"
+#include "../optimization/post_opt_esop.hpp"
 
 #include <cstdint>
 #include <functional>

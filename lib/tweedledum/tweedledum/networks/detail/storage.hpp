@@ -1,11 +1,11 @@
-/*------------------------------------------------------------------------------
+/*-------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
 | Author(s): Bruno Schmitt
-*-----------------------------------------------------------------------------*/
+*------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "../../gates/gate_kinds.hpp"
+#include "../qubit.hpp"
 
 #include <array>
 #include <cstdint>
@@ -15,7 +15,10 @@
 #include <vector>
 
 namespace tweedledum {
+namespace detail {
 
+/*! \brief 
+ */
 template<int PointerFieldSize = 0>
 struct node_pointer {
 private:
@@ -45,7 +48,7 @@ public:
 		};
 	};
 
-	bool operator==(node_pointer<PointerFieldSize> const& other) const
+	bool operator==(node_pointer const& other) const
 	{
 		return data == other.data;
 	}
@@ -74,6 +77,8 @@ struct node_pointer<0> {
 	}
 };
 
+} // namespace detail
+
 union cauint32_t {
 	uint32_t w{0};
 	struct {
@@ -84,9 +89,11 @@ union cauint32_t {
 	};
 };
 
+/*! \brief 
+ */
 template<typename GateType, int DataSize = 0>
 struct wrapper_node {
-	using pointer_type = node_pointer<0>;
+	using pointer_type = detail::node_pointer<0>;
 
 	GateType gate;
 	mutable std::array<cauint32_t, DataSize> data;
@@ -95,25 +102,17 @@ struct wrapper_node {
 	    : gate(g)
 	{}
 
-	wrapper_node(gate_kinds_t kind, uint32_t target, float rotation_angle = 0.0)
-	    : gate(kind, target, rotation_angle)
-	{}
-
-	wrapper_node(gate_kinds_t kind, std::vector<uint32_t>& controls, std::vector<uint32_t>& targets,
-	             float rotation_angle = 0.0)
-	    : gate(kind, controls, targets, rotation_angle)
-	{}
-
 	bool operator==(wrapper_node const& other) const
 	{
 		return gate == other.gate;
 	}
 };
 
-//
+/*! \brief 
+ */
 template<typename GateType, int PointerFieldSize = 1, int DataSize = 0>
 struct regular_node {
-	using pointer_type = node_pointer<PointerFieldSize>;
+	using pointer_type = detail::node_pointer<PointerFieldSize>;
 
 	GateType gate;
 	std::array<std::vector<pointer_type>, GateType::max_num_qubits> qubit;
@@ -123,25 +122,17 @@ struct regular_node {
 	    : gate(g)
 	{}
 
-	regular_node(gate_kinds_t kind, uint32_t target, float rotation_angle = 0.0)
-	    : gate(kind, target, rotation_angle)
-	{}
-
-	regular_node(gate_kinds_t kind, std::vector<uint32_t>& controls, std::vector<uint32_t>& targets,
-	             float rotation_angle = 0.0)
-	    : gate(kind, controls, targets, rotation_angle)
-	{}
-
 	bool operator==(regular_node const& other) const
 	{
 		return gate == other.gate;
 	}
 };
 
-//
+/*! \brief 
+ */
 template<typename GateType, int PointerFieldSize = 1, int DataSize = 0>
 struct uniform_node {
-	using pointer_type = node_pointer<PointerFieldSize>;
+	using pointer_type = detail::node_pointer<PointerFieldSize>;
 
 	GateType gate;
 	std::array<std::array<pointer_type, 2>, GateType::max_num_qubits> qubit;
@@ -151,21 +142,14 @@ struct uniform_node {
 	    : gate(g)
 	{}
 
-	uniform_node(gate_kinds_t kind, uint32_t target, float rotation_angle = 0.0)
-	    : gate(kind, target, rotation_angle)
-	{}
-
-	uniform_node(gate_kinds_t kind, std::vector<uint32_t>& controls, std::vector<uint32_t>& targets,
-	             float rotation_angle = 0.0)
-	    : gate(kind, controls, targets, rotation_angle)
-	{}
-
-	bool operator==(uniform_node<GateType, PointerFieldSize, DataSize> const& other) const
+	bool operator==(uniform_node const& other) const
 	{
 		return gate == other.gate;
 	}
 };
 
+/*! \brief 
+ */
 template<typename NodeType>
 struct storage {
 	storage()
@@ -178,12 +162,55 @@ struct storage {
 		nodes.reserve(size);
 	}
 
-	std::vector<typename NodeType::pointer_type> inputs;
+	std::vector<uint32_t> inputs;
 	std::vector<NodeType> nodes;
 	std::vector<NodeType> outputs;
-	// Qubit names
-	std::unordered_map<std::string, uint32_t> label_to_id;
-	std::vector<std::string> id_to_label;
+	std::vector<uint32_t> rewiring_map;
+};
+
+/*! \brief 
+ */
+class qlabels_map {
+public:
+	auto map(qubit_id qid, std::string const& qlabel)
+	{
+		qlabel_to_qid_.emplace(qlabel, qid);
+		qid_to_qlabel_.emplace_back(qlabel);
+	}
+
+	auto to_qid(std::string const& qlabel) const
+	{
+		return qlabel_to_qid_.at(qlabel);
+	}
+
+	auto to_qlabel(qubit_id qid) const
+	{
+		return qid_to_qlabel_.at(qid);
+	}
+
+	auto cbegin() const
+	{
+		return qid_to_qlabel_.cbegin();
+	}
+
+	auto cend() const
+	{
+		return qid_to_qlabel_.cend();
+	}
+
+	auto begin()
+	{
+		return qid_to_qlabel_.begin();
+	}
+
+	auto end()
+	{
+		return qid_to_qlabel_.end();
+	}
+
+private:
+	std::unordered_map<std::string, qubit_id> qlabel_to_qid_;
+	std::vector<std::string> qid_to_qlabel_;
 };
 
 } // namespace tweedledum

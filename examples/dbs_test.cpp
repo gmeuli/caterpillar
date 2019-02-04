@@ -38,31 +38,15 @@ void run_dbs_with_strategy( std::vector<uint32_t> perm, SynthesisFn const& synth
 {
   stats st;
   {
-    auto count_T_gates = [&]( Ntk const& netlist ){
-      auto T_number = 0u;
-      netlist.foreach_cgate( [&]( const auto& gate ){
-          if ( gate.gate.operation() == tweedledum::gate_set::t )
-          {
-            ++T_number;
-          }
-        });
-      return T_number;
-    };
 
     stopwatch t( st.total_time );
     auto const stg_circ = tweedledum::dbs<Ntk>( perm, synth_fn );
-    std::cout << tweedledum::to_unicode_str(stg_circ)<< std::endl;
+    //std::cout << tweedledum::to_unicode_str(stg_circ)<< std::endl;
 
-    
-    auto const dec_stg_circ =  tweedledum::barenco_decomposition<Ntk>(stg_circ);
-    std::cout << tweedledum::to_unicode_str(dec_stg_circ)<< std::endl;
 
-    auto const q_circ = tweedledum::dt_decomposition<Ntk>( dec_stg_circ );
-    std::cout << tweedledum::to_unicode_str(q_circ)<< std::endl;
-
-    st.num_gates = q_circ.num_gates();
-    st.num_qubits = q_circ.num_qubits();
-    st.T_count = count_T_gates( q_circ );
+    st.num_gates = stg_circ.num_gates();
+    st.num_qubits = stg_circ.num_qubits();
+    st.T_count = caterpillar::detail::count_t_gates( stg_circ );
   }
   st.report( name );
 }
@@ -153,12 +137,11 @@ int main( int argc, char** argv )
   {
     std::cout << BOLD << "[i] benchmark: " << UNDERLINE << key << ENDC << std::endl;
 
-    if(key == "tof6")
-    {
+    
       run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pprm(), "PPRM" );
       run_dbs_with_strategy<netlist_t>( val, tweedledum::stg_from_pkrm(), "PKRM" );
       run_dbs_with_strategy<netlist_t>( val, caterpillar::stg_from_exact_synthesis(), "EXACT(unit)" );
-    }
+    
     if ( true )
       continue;
     

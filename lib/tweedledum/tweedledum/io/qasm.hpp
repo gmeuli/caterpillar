@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
-| Author(s): Bruno Schmitt
+| Author(s): Bruno Schmitt, Mathias Soeken
 *-------------------------------------------------------------------------------------------------*/
 #pragma once
 
@@ -12,10 +12,11 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace tweedledum {
 
-/*! \brief Writes network in quil format into output stream
+/*! \brief Writes network in OPENQASM 2.0 format into output stream
  *
  * An overloaded variant exists that writes the network into a file.
  *
@@ -23,18 +24,23 @@ namespace tweedledum {
  * - `foreach_control`
  * - `foreach_target`
  * - `op`
- *
+ * 
  * **Required network functions:**
  * - `foreach_cnode`
- * - `foreach_cqubit`
  * - `num_qubits`
  *
  * \param network A quantum network
  * \param os Output stream
  */
 template<typename Network>
-void write_quil(Network const& network, std::ostream& os)
+void write_qasm(Network const& network, std::ostream& os)
 {
+	// header
+	os << "OPENQASM 2.0;\n";
+	os << "include \"qelib1.inc\";\n";
+	os << fmt::format("qreg q[{}];\n", network.num_qubits());
+	os << fmt::format("creg c[{}];\n", network.num_qubits());
+
 	network.foreach_cgate([&](auto const& node) {
 		auto const& gate = node.gate;
 		switch (gate.operation()) {
@@ -44,37 +50,49 @@ void write_quil(Network const& network, std::ostream& os)
 			return true;
 
 		case gate_set::hadamard:
-			gate.foreach_target([&](auto target) { os << fmt::format("H {}\n", target); });
+			gate.foreach_target([&](auto target) { os << fmt::format("h q[{}];\n", target); });
 			break;
 
 		case gate_set::pauli_x:
-			gate.foreach_target([&](auto target) { os << fmt::format("X {}\n", target); });
+			gate.foreach_target([&](auto target) { os << fmt::format("x q[{}];\n", target); });
+			break;
+
+		case gate_set::pauli_z:
+			gate.foreach_target([&](auto target) { os << fmt::format("z q[{}];\n", target); });
+			break;
+
+		case gate_set::phase:
+			gate.foreach_target([&](auto target) { os << fmt::format("s q[{}];\n", target); });
+			break;
+
+		case gate_set::phase_dagger:
+			gate.foreach_target([&](auto target) { os << fmt::format("sdg q[{}];\n", target); });
 			break;
 
 		case gate_set::t:
-			gate.foreach_target([&](auto target) { os << fmt::format("T {}\n", target); });
+			gate.foreach_target([&](auto target) { os << fmt::format("t q[{}];\n", target); });
 			break;
 
 		case gate_set::t_dagger:
-			gate.foreach_target([&](auto target) { os << fmt::format("RZ(-pi/4) {}\n", target); });
+			gate.foreach_target([&](auto target) { os << fmt::format("tdg q[{}];\n", target); });
 			break;
 
 		case gate_set::rotation_z:
 			gate.foreach_target([&](auto target) {
-				os << fmt::format("RZ({}) {}\n", gate.rotation_angle().numeric_value(), target);
+				os << fmt::format("rz({}) q[{}];\n", gate.rotation_angle().numeric_value(), target);
 			});
 			break;
 
 		case gate_set::cx:
 			gate.foreach_control([&](auto control) {
 				if (control.is_complemented()) {
-					os << fmt::format("X {}\n", control.index());
+					os << fmt::format("x q[{}]\n", control.index());
 				}
 				gate.foreach_target([&](auto target) {
-					os << fmt::format("CNOT {} {}\n", control.index(), target); 
+					os << fmt::format("cx q[{}], q[{}];\n", control.index(), target);
 				});
 				if (control.is_complemented()) {
-					os << fmt::format("X {}\n", control.index());
+					os << fmt::format("x q[{}]\n", control.index());
 				}
 			});
 			break;
@@ -84,7 +102,7 @@ void write_quil(Network const& network, std::ostream& os)
 			std::vector<qubit_id> targets;
 			gate.foreach_control([&](auto control) {
 				if (control.is_complemented()) {
-					os << fmt::format("X {}\n", control.index());
+					os << fmt::format("x q[{}]\n", control.index());
 				}
 				controls.push_back(control.index()); 
 			});
@@ -98,31 +116,33 @@ void write_quil(Network const& network, std::ostream& os)
 				return true;
 
 			case 0u:
-				for (auto target : targets) {
-					os << fmt::format("X {}\n", target);
+				for (auto q : targets) {
+					os << fmt::format("x q[{}];\n", q);
 				}
 				break;
 
 			case 1u:
-				for (auto target : targets) {
-					os << fmt::format("CNOT {} {}\n", controls[0], target);
+				for (auto q : targets) {
+					os << fmt::format("cx q[{}],q[{}];\n", controls[0], q);
 				}
 				break;
 
 			case 2u:
 				for (auto i = 1u; i < targets.size(); ++i) {
-					os << fmt::format("CNOT {} {}\n", targets[0], targets[i]);
+					os << fmt::format("cx q[{}], q[{}];\n", targets[0],
+					                   targets[i]);
 				}
-				os << fmt::format("CCNOT {} {} {}\n", controls[0], controls[1],
-				                   targets[0]);
+				os << fmt::format("ccx q[{}], q[{}], q[{}];\n", controls[0],
+				                   controls[1], targets[0]);
 				for (auto i = 1u; i < targets.size(); ++i) {
-					os << fmt::format("CNOT {} {}\n", targets[0], targets[i]);
+					os << fmt::format("cx q[{}], q[{}];\n", targets[0],
+					                   targets[i]);
 				}
 				break;
 			}
 			gate.foreach_control([&](auto control) {
 				if (control.is_complemented()) {
-					os << fmt::format("X {}\n", control.index());
+					os << fmt::format("x q[{}]\n", control.index());
 				}
 			});
 			break;
@@ -131,26 +151,25 @@ void write_quil(Network const& network, std::ostream& os)
 	});
 }
 
-/*! \brief Writes network in quil format into a file
+/*! \brief Writes network in OPENQASM 2.0 format into a file
  *
  * **Required gate functions:**
  * - `foreach_control`
  * - `foreach_target`
  * - `op`
- *
+ * 
  * **Required network functions:**
- * - `foreach_cnode`
- * - `foreach_cqubit`
  * - `num_qubits`
+ * - `foreach_cnode`
  *
  * \param network A quantum network
  * \param filename Filename
  */
 template<typename Network>
-void write_quil(Network const& network, std::string const& filename)
+void write_qasm(Network const& network, std::string const& filename)
 {
 	std::ofstream os(filename.c_str(), std::ofstream::out);
-	write_quil(network, os);
+	write_qasm(network, os);
 }
 
 } // namespace tweedledum

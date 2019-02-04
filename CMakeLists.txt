@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Options
 option(CATERPILLAR_EXAMPLES "Build examples" ON)
 option(CATERPILLAR_TEST "Build tests" OFF)
+option(CATERPILLAR_Z3 "Use z3" OFF)
 
 if(UNIX)
   # show quite some warnings (but remove some intentionally)

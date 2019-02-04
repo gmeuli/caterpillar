@@ -1,162 +1,261 @@
-/*------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
-| Author(s): Fereshte Mozafari
-*-----------------------------------------------------------------------------*/
+| Author(s): Bruno Schmitt, Fereshte Mozafari
+*-------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "../../gates/gate_kinds.hpp"
+#include "../../gates/gate_set.hpp"
+#include "../../gates/gate_base.hpp"
+#include "../../networks/qubit.hpp"
+#include "../../utils/bit_matrix_rm.hpp"
+#include "../../utils/dynamic_bitset.hpp"
 
-#include <cmath>
+#include <algorithm>
 #include <cstdint>
-#include <iomanip>
-#include <iostream>
 #include <numeric>
+#include <unordered_map>
 #include <vector>
 
 namespace tweedledum {
-
 namespace detail {
 
-inline uint32_t sub_pattern(uint32_t num, uint32_t s, uint32_t e)
-{
-	return (num >> s) & ((1 << (e - s + 1)) - 1);
-}
+template<class Network, class Matrix>
+class cnot_patel_ftor {
+	using network_type = Network;
+	using matrix_type = Matrix;
+	using qubit_pair_type = std::pair<uint32_t, uint32_t>;
 
-inline void transpose(std::vector<uint32_t>& matrix)
-{
-	// for 0 <= i < j < bit_count ...
-	for (auto j = 1u; j < matrix.size(); ++j) {
-		for (auto i = 0u; i < j; ++i) {
-			auto mij = (matrix[i] >> j) & 1;
-			auto mji = (matrix[j] >> i) & 1;
+public:
+	cnot_patel_ftor(network_type& network, std::vector<qubit_id> const& qubits,
+	                matrix_type const& matrix, uint32_t partition_size)
+	    : network_(network)
+	    , qubits_(qubits)
+	    , matrix_(matrix)
+	    , partition_size_(partition_size)
+	{}
 
-			if (mij == mji)
-				continue;
+	auto synthesize(bool add_gates = true)
+	{
+		// synthesize lower triangular part
+		auto gates_lower = lower_cnot_synthesis();
+		matrix_.transpose();
+		// synthesize upper triangular part
+		auto gates_upper = lower_cnot_synthesis();
 
-			matrix[i] ^= (1 << j);
-			matrix[j] ^= (1 << i);
+		if (add_gates == false) {
+			return (gates_upper.size() + gates_lower.size());
 		}
+
+		for (const auto [control, target] : gates_upper) {
+			// switch control/target of CX gates in gates_upper;
+			network_.add_gate(gate::cx, qubits_[target], qubits_[control]);
+		}
+
+		std::reverse(gates_lower.begin(), gates_lower.end());
+		for (const auto [control, target] : gates_lower) {
+			network_.add_gate(gate::cx, qubits_[control], qubits_[target]);
+		}
+		return (gates_upper.size() + gates_lower.size());
 	}
-}
 
-inline std::vector<std::pair<uint16_t, uint16_t>> lwr_cnot_synthesis(std::vector<uint32_t>& matrix,
-                                                                     uint32_t n, uint32_t m)
-{
+private:
+	auto lower_cnot_synthesis()
+	{
+		std::vector<qubit_pair_type> gates;
+		const auto num_columns = matrix_.num_columns();
+		const auto num_sections = (num_columns - 1u) / partition_size_ + 1u;
 
-	std::vector<std::pair<uint16_t, uint16_t>> gates;
-	uint32_t sec_count = std::ceil(static_cast<float>(n) / m);
-	for (auto sec = 0u; sec < sec_count; ++sec) {
-		// remove duplicate sub-rows in section sec
-		std::vector<uint32_t> patt(1 << m, (1 << n));
-		for (auto row = sec * m; row < n; ++row) {
-			uint32_t start = sec * m;
-			uint32_t end = start + m - 1;
-			uint32_t sub_row_patt = sub_pattern(matrix[row], start, end);
-			// if this is the first copy of pattern save it otherwise remove
-			if (patt[sub_row_patt] == (1u << n))
-				patt[sub_row_patt] = row;
-			else {
-				matrix[row] ^= matrix[patt[sub_row_patt]];
-				gates.emplace_back(patt[sub_row_patt], row);
-			}
-		}
-		// use Gaussian elimination for remaining entries in column section
-		uint32_t temp = (sec == (sec_count - 1)) ? n : ((sec + 1) * m);
-		for (auto col = sec * m; col < temp; col++) {
-			// check for 1 on diagonal
-			bool diag_one = (matrix[col] >> col) & 1;
+		for (auto section = 0ul; section < num_sections; ++section) {
+			const auto start = section * partition_size_;
+			const auto end = std::min(start + partition_size_, matrix_.num_columns());
+			std::unordered_map<uint32_t, uint32_t> patterns_table;
 
-			// remove ones in rows below column col
-			for (auto row = col + 1; row < n; row++) {
-				if (((matrix[row] >> col) & 1) == 0)
-					continue;
-				if (!diag_one) {
-					matrix[col] ^= matrix[row];
-					gates.emplace_back(row, col);
-					diag_one = true;
+			// For each section we use row operations to eliminate sub-row patterns
+			// that repeat in that section.
+			for (auto row = start; row < matrix_.num_rows(); ++row) {
+				auto pattern = 0u;
+				auto subrow_column = 0u;
+				for (auto column = start; column < end; ++column) {
+					pattern |= (matrix_.at(row, column) << subrow_column);
+					subrow_column += 1;
 				}
+				if (patterns_table.find(pattern) != patterns_table.end()) {
+					matrix_.row(row) ^= matrix_.row(patterns_table[pattern]);
+					gates.emplace_back(patterns_table[pattern], row);
+				} else {
+					patterns_table[pattern] = row;
+				}
+			}
 
-				matrix[row] ^= matrix[col];
-				gates.emplace_back(col, row);
+			// Gaussian elimination
+			for (auto column = start; column < end; ++column) {
+				auto is_diagonal_one = (matrix_.at(column, column) == 1);
+				for (auto row = column + 1; row < matrix_.num_rows(); ++row) {
+					if (matrix_.at(row, column) == 0) {
+						continue;
+					}
+					if (is_diagonal_one == 0) {
+						is_diagonal_one = 1;
+						matrix_.row(column) ^= matrix_.row(row);
+						gates.emplace_back(row, column);
+					}
+					matrix_.row(row) ^= matrix_.row(column);
+					gates.emplace_back(column, row);
+				}
 			}
 		}
+		return gates;
 	}
 
-	return gates;
-}
+private:
+	network_type& network_;
+	std::vector<qubit_id> qubits_;
+	matrix_type matrix_;
+	uint32_t partition_size_;
+};
 
-} /* namespace detail */
+} // namespace detail
 
-/*! \brief Linear circuit synthesis
+/*! \brief Parameters for `cnot_patel`. */
+struct cnot_patel_params {
+	/*! \brief Allow rewiring. */
+	bool allow_rewiring = false;
+	/*! \brief Search for the best parition size. */
+	bool best_partition_size = false;
+	/*! \brief Partition size */
+	uint32_t partition_size = 1u;
+};
+
+/*! \brief CNOT Patel synthesis for linear circuits
  *
- * A specialzed variant of `cnot_patel` which accepts a preinitialized network
- * (possibly with existing gates) and a qubits map.
+ * A specialzed variant of `cnot_patel` which accepts a existing network (possibly with gates).
+ *
+ * \param network A quantum network
+ * \param qubits  The subset of qubits the linear reversible circuit acts upon.
+ * \param matrix  The square matrix representing a linear reversible circuit.
+ * \param params  The parameters that configure the synthesis process. 
+ *                See `cnot_patel_params` for details.
  */
-template<class Network>
-void cnot_patel(Network& net, std::vector<uint32_t>& matrix, uint32_t partition_size,
-                std::vector<uint32_t> const& qubits_map)
+template<class Network, class Matrix>
+void cnot_patel(Network& network, std::vector<qubit_id> const& qubits, Matrix const& matrix,
+                cnot_patel_params params = {})
 {
-	/* number of qubits can be taken from matrix, since it is n x n matrix. */
-	const auto nqubits = matrix.size();
-	std::vector<std::pair<uint16_t, uint16_t>> gates_u;
-	std::vector<std::pair<uint16_t, uint16_t>> gates_l;
+	assert(network.num_qubits() >= qubits.size());
+	assert(matrix.is_square());
+	assert(qubits.size() == matrix.num_rows());
+	assert(params.best_partition_size || (params.partition_size >= 1 && params.partition_size <= 32));
 
-	gates_l = detail::lwr_cnot_synthesis(matrix, nqubits, partition_size);
-
-	detail::transpose(matrix);
-	gates_u = detail::lwr_cnot_synthesis(matrix, nqubits, partition_size);
-
-	std::reverse(gates_l.begin(), gates_l.end());
-	for (const auto [c, t] : gates_u) {
-		net.add_gate(gate_kinds_t::cx, qubits_map[t], qubits_map[c]);
+	// Abbreviations:
+	//   - ps : partition size
+	if (!params.allow_rewiring && !params.best_partition_size) {
+		detail::cnot_patel_ftor synthesizer(network, qubits, matrix, params.partition_size);
+		synthesizer.synthesize();
+		return;
 	}
-	for (const auto [c, t] : gates_l) {
-		net.add_gate(gate_kinds_t::cx, qubits_map[c], qubits_map[t]);
+
+	auto const min_ps = params.best_partition_size ? 1u : params.partition_size;
+	auto const max_ps = params.best_partition_size ? 32u : params.partition_size;
+	auto const old_num_gates = network.num_gates();
+	auto best_num_gates = std::numeric_limits<uint32_t>::max();
+
+	if (params.allow_rewiring == true) {
+		auto best_ps = min_ps;
+		std::vector<uint32_t> best_permutation(qubits.size());
+		std::iota(best_permutation.begin(), best_permutation.end(), 0u);
+
+		auto permutation = best_permutation;
+		do {
+			auto permuted_matrix = matrix.permute_rows(permutation);
+			auto ps = min_ps;
+			do {
+				detail::cnot_patel_ftor synthesizer(network, qubits, permuted_matrix, ps);
+				const auto num_gates = synthesizer.synthesize(false);
+				if (num_gates < best_num_gates) {
+					best_num_gates = num_gates;
+					best_ps = ps;
+					best_permutation = permutation;
+				}
+				++ps;
+				assert(network.num_gates() == old_num_gates);
+			} while (ps < max_ps);
+		} while (std::next_permutation(permutation.begin(), permutation.end()));
+
+		auto permuted_matrix = matrix.permute_rows(best_permutation);
+		detail::cnot_patel_ftor synthesizer(network, qubits, permuted_matrix, best_ps);
+		synthesizer.synthesize();
+		
+		auto transpositions = permutation_to_transpositions(best_permutation);
+		for (auto&& [i, j] : transpositions) {
+			i = qubits[i];
+			j = qubits[j];
+		}
+		network.rewire(transpositions);
+	} else {
+		auto best_ps = min_ps;
+		auto ps = min_ps;
+		do {
+			detail::cnot_patel_ftor synthesizer(network, qubits, matrix, ps);
+			const auto num_gates = synthesizer.synthesize(false);
+			if (num_gates < best_num_gates) {
+				best_num_gates = num_gates;
+				best_ps = ps;
+			}
+			++ps;
+			assert(network.num_gates() == old_num_gates);
+		} while (ps < max_ps);
+		detail::cnot_patel_ftor synthesizer(network, qubits, matrix, best_ps);
+		synthesizer.synthesize();
 	}
 }
 
-/*! \brief Linear circuit synthesis
+/*! \brief CNOT Patel synthesis for linear circuits
  *
    \verbatim embed:rst
    This algorithm is based on the work in :cite:`PMH08`.
 
-   The following code shows how to apply the algorithm to the example in the
-   original paper.
+   The following code shows how to apply the algorithm to the example in the original paper.
 
    .. code-block:: c++
 
-      std::vector<uint32_t> matrix{{0b000011,
+      std::vector<uint32_t> rows = {0b000011,
                                     0b011001,
-                                    0b010010,
-                                    0b111111,
-                                    0b111011,
-                                    0b011100}};
+				    0b010010,
+				    0b111111,
+				    0b111011,
+				    0b011100};
+      bit_matrix_rm matrix(6, rows);
+      cnot_patel_params parameters;
+      parameters.allow_rewiring = false;
+      parameters.best_partition_size = false;
+      parameters.partition_size = 2u;
+      auto network = cnot_patel<netlist<mcst_gate>>(matrix, parameters);
 
-      auto circ = cnot_patel<gg_network<mcst_gate>>(matrix, 2);
    \endverbatim
  *
- * \param matrix A linear matrix
- * \param partition_size The partition size for the columns (must be at least 0
- *                       and at most `matrix.size()`)
+ * \param matrix The square matrix representing a linear reversible circuit.
+ * \param params The parameters that configure the synthesis process. 
+ *               See `cnot_patel_params` for details.
+ *
  * \algtype synthesis
  * \algexpects Linear matrix
- * \algreturns CNOT circuit
+ * \algreturns {CNOT} network
  */
-template<class Network>
-Network cnot_patel(std::vector<uint32_t>& matrix, uint32_t partition_size)
+template<class Network, class Matrix>
+Network cnot_patel(Matrix const& matrix, cnot_patel_params params = {})
 {
-	/* number of qubits can be taken from matrix, since it is n x n matrix. */
-	Network net;
-	const auto nqubits = matrix.size();
-	for (auto i = 0u; i < nqubits; ++i) {
-		net.allocate_qubit();
-	}
-	std::vector<uint32_t> qubits_map(nqubits);
-	std::iota(qubits_map.begin(), qubits_map.end(), 0u);
+	assert(matrix.is_square());
+	assert(params.best_partition_size || (params.partition_size >= 1 && params.partition_size <= 32));
 
-	cnot_patel(net, matrix, partition_size, qubits_map);
-	return net;
+	Network network;
+	const auto num_qubits = matrix.num_rows();
+	for (auto i = 0u; i < num_qubits; ++i) {
+		network.add_qubit();
+	}
+	std::vector<qubit_id> qubits(num_qubits);
+	std::iota(qubits.begin(), qubits.end(), 0u);
+	cnot_patel(network, qubits, matrix, params);
+	return network;
 }
 
 } // namespace tweedledum

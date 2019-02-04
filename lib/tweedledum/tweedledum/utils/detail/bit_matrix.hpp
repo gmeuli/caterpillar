@@ -1,13 +1,14 @@
-/*-------------------------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
 | Author(s): Bruno Schmitt
-*------------------------------------------------------------------------------------------------*/
+*-------------------------------------------------------------------------------------------------*/
 #pragma once
 
 #include "../dynamic_bitset.hpp"
 
 #include <cassert>
+#include <cstdlib>
 #include <fmt/format.h>
 #include <iostream>
 #include <memory>
@@ -84,6 +85,28 @@ struct bit_matrix {
 		assert(line.size() == num_bits_per_line_);
 		lines_.emplace_back(line);
 	}
+
+	template <typename T>
+	constexpr void emplace_back_line(T&& line)
+	{
+		lines_.emplace_back(num_bits_per_line_, std::forward<T>(line));
+	}
+
+	// This method modify the matrix directly
+	// I wonder if it wouldn't be better to return a new transposed version of
+	// this matrix
+	void transpose()
+	{
+		// Take a faster path
+		if (num_bits_per_line_ == lines_.size()) {
+			square_transpose();
+			return;
+		}
+		// Slow path
+		// TODO: impelment other cases
+		assert(0 && "Transpose method not implemented for the general case");
+		std::abort();
+	}
 #pragma endregion
 
 	size_type num_bits_per_line_;
@@ -98,6 +121,19 @@ private:
 		num_bits_per_line_ = num_rows;
 		for (auto line_value : lines_values) {
 			lines_.emplace_back(num_bits_per_line_, line_value);
+		}
+	}
+
+	void square_transpose()
+	{
+		for (auto j = 1u; j < num_bits_per_line_; ++j) {
+			for (auto i = 0u; i < j; ++i) {
+				if (lines_[i][j] == lines_[j][i]) {
+					continue;
+				}
+				lines_[i][j] ^= 1;
+				lines_[j][i] ^= 1;
+			}
 		}
 	}
 };

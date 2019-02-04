@@ -1,11 +1,11 @@
-/*-------------------------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------------------------
 | This file is distributed under the MIT License.
 | See accompanying file /LICENSE for details.
 | Author(s): Bruno Schmitt
-*------------------------------------------------------------------------------------------------*/
+*-------------------------------------------------------------------------------------------------*/
 #pragma once
 
-#include "../gates/gate_kinds.hpp"
+#include "../gates/gate_set.hpp"
 
 #include <fmt/format.h>
 #include <fstream>
@@ -18,17 +18,16 @@ namespace tweedledum {
  * An overloaded variant exists that writes the network into a file.
  *
  * **Required gate functions:**
- * - `kind`
- * - `is`
  * - `foreach_control`
  * - `foreach_target`
+ * - `op`
  *
  * **Required network functions:**
+ * - `foreach_cnode`
+ * - `foreach_cqubit`
  * - `num_qubits`
- * - `foreach_node`
- * - `foreach_qubit`
  *
- * \param network Network
+ * \param network A quantum network
  * \param os Output stream
  * \param color_marked_gates Flag to draw marked nodes in red
  */
@@ -38,85 +37,87 @@ void write_qpic(Network const& network, std::ostream& os, bool color_marked_gate
 	if (color_marked_gates) {
 		os << "DEFINE mark color=red:style=thick\n";
 	}
-	network.foreach_qubit([&](auto id, auto const& name) {
+	network.foreach_cqubit([&](auto id, auto const& name) {
 		os << fmt::format("q{} W {} {}\n", id, name, name);
 	});
 
-	network.foreach_gate([&](auto& node) {
+	network.foreach_cgate([&](auto& node) {
 		auto prefix = "";
-		if (node.gate.is(gate_kinds_t::mcx)) {
+		if (node.gate.is(gate_set::mcx)) {
 			prefix = "+";
 		}
-		node.gate.foreach_target(
-		    [&](auto qubit) { os << fmt::format("{}q{} ", prefix, qubit); });
-		switch (node.gate.kind()) {
-		case gate_kinds_t::pauli_x:
+		node.gate.foreach_target([&](auto qubit) {
+			os << fmt::format("{}q{} ", prefix, qubit);
+		});
+		switch (node.gate.operation()) {
+		case gate_set::pauli_x:
 			os << 'N';
 			break;
 
-		case gate_kinds_t::cx:
+		case gate_set::cx:
 			os << 'C';
 			break;
 
-		case gate_kinds_t::mcx:
+		case gate_set::mcx:
 			break;
 
-		case gate_kinds_t::pauli_z:
-		case gate_kinds_t::cz:
-		case gate_kinds_t::mcz:
+		case gate_set::pauli_z:
+		case gate_set::cz:
+		case gate_set::mcz:
 			os << 'Z';
 			break;
 
-		case gate_kinds_t::hadamard:
+		case gate_set::hadamard:
 			os << 'H';
 			break;
 
-		case gate_kinds_t::phase:
+		case gate_set::phase:
 			os << "G $P$";
 			break;
 
-		case gate_kinds_t::phase_dagger:
+		case gate_set::phase_dagger:
 			os << "G $P^{\\dagger}$";
 			break;
 
-		case gate_kinds_t::t:
+		case gate_set::t:
 			os << "G $T$";
 			break;
 
-		case gate_kinds_t::t_dagger:
+		case gate_set::t_dagger:
 			os << "G $T^{\\dagger}$";
 			break;
 
-		case gate_kinds_t::rotation_x:
+		case gate_set::rotation_x:
 			os << "G $R_{x}$";
 			break;
 
-		case gate_kinds_t::rotation_z:
+		case gate_set::rotation_z:
 			os << "G $R_{z}$";
 			break;
 
 		default:
 			break;
 		}
-		node.gate.foreach_control([&](auto qubit) { os << fmt::format(" q{}", qubit); });
-		os << fmt::format("{}", color_marked_gates && network.mark(node) ? " mark\n" : "\n");
+		node.gate.foreach_control([&](auto qubit) {
+			os << fmt::format(" {}q{}", qubit.is_complemented() ? "-" : "", qubit); 
+		});
+		os << '\n';
 	});
 }
 
 /*! \brief Writes network in qpic format into a file
  *
  * **Required gate functions:**
- * - `kind`
- * - `is`
  * - `foreach_control`
  * - `foreach_target`
+ * - `op`
  *
  * **Required network functions:**
+ * - `foreach_cnode`
+ * - `foreach_cqubit`
  * - `num_qubits`
- * - `foreach_node`
- * - `foreach_qubit`
  *
- * \param network Network
+ * \param network A quantum network
  * \param filename Filename
  * \param color_marked_gates Flag to draw marked nodes in red
  */

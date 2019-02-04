@@ -10,18 +10,17 @@
 #include <array>
 #include <cstdint>
 #include <fmt/format.h>
+#include <mockturtle/algorithms/cut_enumeration/spectr_cut.hpp>
 #include <mockturtle/traits.hpp>
 #include <mockturtle/utils/node_map.hpp>
 #include <mockturtle/utils/stopwatch.hpp>
 #include <mockturtle/views/topo_view.hpp>
-#include <mockturtle/algorithms/cut_enumeration/spectr_cut.hpp>
 #include <stack>
-#include <tweedledum/gates/gate_kinds.hpp>
-#include <tweedledum/algorithms/synthesis/single_target_gates.hpp>
+
+#include <tweedledum/algorithms/synthesis/stg.hpp>
 
 #include <variant>
 #include <vector>
-
 
 namespace caterpillar
 {
@@ -141,7 +140,7 @@ private:
     node_to_qubit[n] = qnet.num_qubits();
     qnet.add_qubit();
     if ( v )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, node_to_qubit[n] );
+      qnet.add_gate( tweedledum::gate::pauli_x, node_to_qubit[n] );
   }
 
   uint32_t request_ancilla()
@@ -176,12 +175,12 @@ private:
     return controls;
   }
 
-  std::vector<uint32_t> get_fanin_as_qubits( mt::node<LogicNetwork> const& n )
+  std::vector<tweedledum::qubit_id> get_fanin_as_qubits( mt::node<LogicNetwork> const& n )
   {
-    std::vector<uint32_t> controls;
+    std::vector<tweedledum::qubit_id> controls;
     ntk.foreach_fanin( n, [&]( auto const& f, auto i ) {
       assert( !ntk.is_complemented( f ) );
-      controls.push_back( node_to_qubit[ntk.node_to_index( ntk.get_node( f ) )] );
+      controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.node_to_index( ntk.get_node( f ) )] ) );
     } );
     return controls;
   }
@@ -290,7 +289,7 @@ private:
       if ( tt == clone )
       {
         const auto controls = get_fanin_as_qubits( node );
-        compute_xor_block( controls, t );
+        compute_xor_block( controls, tweedledum::qubit_id( t ) );
       }
       else
       {
@@ -298,7 +297,7 @@ private:
         // controls directly as mapped qubits.  We assume that the inputs cannot
         // be complemented, e.g., in the case of k-LUT networks.
         const auto controls = get_fanin_as_qubits( node );
-        compute_lut( ntk.node_function( node ), controls, t );
+        compute_lut( ntk.node_function( node ), controls, tweedledum::qubit_id( t ) );
       }
     }
   }
@@ -346,137 +345,137 @@ private:
     if constexpr ( mt::has_node_function_v<LogicNetwork> )
     {
       const auto controls = get_fanin_as_qubits( node );
-      compute_xor_block( controls, t );
+      compute_xor_block( controls, tweedledum::qubit_id( t ) );
     }
   }
 
   void compute_and( uint32_t c1, uint32_t c2, bool p1, bool p2, uint32_t t )
   {
     if ( p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
     if ( p2 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
-    qnet.add_gate( tweedledum::gate_kinds_t::mcx, std::vector<uint32_t>{{c1, c2}},
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
+    qnet.add_gate( tweedledum::gate::mcx, std::vector<uint32_t>{{c1, c2}},
                    std::vector<uint32_t>{{t}} );
     if ( p2 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
     if ( p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
   }
 
   void compute_or( uint32_t c1, uint32_t c2, bool p1, bool p2, uint32_t t )
   {
     if ( !p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
     if ( !p2 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
-    qnet.add_gate( tweedledum::gate_kinds_t::mcx, std::vector<uint32_t>{{c1, c2}},
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
+    qnet.add_gate( tweedledum::gate::mcx, std::vector<uint32_t>{{c1, c2}},
                    std::vector<uint32_t>{{t}} );
-    qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, t );
+    qnet.add_gate( tweedledum::gate::pauli_x, t );
     if ( !p2 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
     if ( !p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
   }
 
   void compute_xor( uint32_t c1, uint32_t c2, bool inv, uint32_t t )
   {
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, t );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c2, t );
+    qnet.add_gate( tweedledum::gate::cx, c1, t );
+    qnet.add_gate( tweedledum::gate::cx, c2, t );
     if ( inv )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, t );
+      qnet.add_gate( tweedledum::gate::pauli_x, t );
   }
 
   void compute_xor3( uint32_t c1, uint32_t c2, uint32_t c3, bool inv, uint32_t t )
   {
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, t );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c2, t );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, t );
+    qnet.add_gate( tweedledum::gate::cx, c1, t );
+    qnet.add_gate( tweedledum::gate::cx, c2, t );
+    qnet.add_gate( tweedledum::gate::cx, c3, t );
     if ( inv )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, t );
+      qnet.add_gate( tweedledum::gate::pauli_x, t );
   }
 
   void compute_maj( uint32_t c1, uint32_t c2, uint32_t c3, bool p1, bool p2, bool p3, uint32_t t )
   {
     if ( p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
     if ( !p2 ) /* control 2 behaves opposite */
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
     if ( p3 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c3 );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, c2 );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, c1 );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, t );
-    qnet.add_gate( tweedledum::gate_kinds_t::mcx, std::vector<uint32_t>{{c1, c2}},
+      qnet.add_gate( tweedledum::gate::pauli_x, c3 );
+    qnet.add_gate( tweedledum::gate::cx, c1, c2 );
+    qnet.add_gate( tweedledum::gate::cx, c3, c1 );
+    qnet.add_gate( tweedledum::gate::cx, c3, t );
+    qnet.add_gate( tweedledum::gate::mcx, std::vector<uint32_t>{{c1, c2}},
                    std::vector<uint32_t>{{t}} );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, c1 );
-    qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, c2 );
+    qnet.add_gate( tweedledum::gate::cx, c3, c1 );
+    qnet.add_gate( tweedledum::gate::cx, c1, c2 );
     if ( p3 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c3 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c3 );
     if ( !p2 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c2 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c2 );
     if ( p1 )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, c1 );
+      qnet.add_gate( tweedledum::gate::pauli_x, c1 );
   }
 
-  void compute_xor_block( std::vector<uint32_t> const& controls, uint32_t t )
+  void compute_xor_block( std::vector<tweedledum::qubit_id> const& controls, tweedledum::qubit_id t )
   {
     for ( auto c : controls )
     {
       if ( c != t )
-        qnet.add_gate( tweedledum::gate_kinds_t::cx, c, t );
+        qnet.add_gate( tweedledum::gate::cx, c, t );
     }
   }
 
   void compute_lut( kitty::dynamic_truth_table const& function,
-                    std::vector<uint32_t> const& controls, uint32_t t )
+                    std::vector<tweedledum::qubit_id> const& controls, tweedledum::qubit_id t )
   {
     auto qubit_map = controls;
     qubit_map.push_back( t );
-    stg_fn( qnet, function, qubit_map );
+    stg_fn( qnet, qubit_map, function );
   }
 
   void compute_xor_inplace( uint32_t c1, uint32_t c2, bool inv, uint32_t t )
   {
     if ( c1 == t )
     {
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c2, c1 );
+      qnet.add_gate( tweedledum::gate::cx, c2, c1 );
     }
     else if ( c2 == t )
     {
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, c2 );
+      qnet.add_gate( tweedledum::gate::cx, c1, c2 );
     }
     else
     {
       std::cerr << "[e] target does not match any control in in-place\n";
     }
     if ( inv )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, t );
+      qnet.add_gate( tweedledum::gate::pauli_x, t );
   }
 
   void compute_xor3_inplace( uint32_t c1, uint32_t c2, uint32_t c3, bool inv, uint32_t t )
   {
     if ( c1 == t )
     {
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c2, c1 );
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, c1 );
+      qnet.add_gate( tweedledum::gate::cx, c2, c1 );
+      qnet.add_gate( tweedledum::gate::cx, c3, c1 );
     }
     else if ( c2 == t )
     {
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, c2 );
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c3, c2 );
+      qnet.add_gate( tweedledum::gate::cx, c1, c2 );
+      qnet.add_gate( tweedledum::gate::cx, c3, c2 );
     }
     else if ( c3 == t )
     {
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c1, c3 );
-      qnet.add_gate( tweedledum::gate_kinds_t::cx, c2, c3 );
+      qnet.add_gate( tweedledum::gate::cx, c1, c3 );
+      qnet.add_gate( tweedledum::gate::cx, c2, c3 );
     }
     else
     {
       std::cerr << "[e] target does not match any control in in-place\n";
     }
     if ( inv )
-      qnet.add_gate( tweedledum::gate_kinds_t::pauli_x, t );
+      qnet.add_gate( tweedledum::gate::pauli_x, t );
   }
 
 private:

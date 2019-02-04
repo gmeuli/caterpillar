@@ -10,20 +10,6 @@ caterpillar is a C++-17 quantum circuit synthesis library. It provides several L
 The following code reads an AIG from an Aiger file and synthesizes the corresponding reversible circuit using a logic network based synthesis method. 
 
 ```c++
-#include <mockturtle/networks/aig.hpp>
-#include <mockturtle/networks/klut.hpp>
-#include <mockturtle/views/mapping_view.hpp>
-#include <mockturtle/algorithms/lut_mapping.hpp>
-#include <mockturtle/algorithms/collapse_mapped.hpp>
-#include <mockturtle/io/aiger_reader.hpp>
-
-#include <caterpillar/lhrs.hpp>
-
-#include <tweedledum/algorithms/synthesis/single_target_gates.hpp>
-#include <tweedledum/networks/gg_network.hpp>
-#include <tweedledum/gates/mcst_gate.hpp>
-
-#include <lorina/aiger.hpp>
 
 mockturtle::aig_network aig;
 

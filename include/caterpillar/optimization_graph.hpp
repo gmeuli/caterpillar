@@ -10,7 +10,7 @@
 #include <kitty/cube.hpp>
 #include <vector>
 
-#include <details/utils.hpp>
+#include "details/utils.hpp"
 
 
 namespace caterpillar

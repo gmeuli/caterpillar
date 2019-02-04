@@ -1,4 +1,4 @@
-include_directories(catch2) # v2.2.1
+include_directories(catch2) # v2.6.0
 
 file(GLOB_RECURSE FILENAMES *.cpp)
 

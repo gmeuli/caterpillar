@@ -13,16 +13,20 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <vector>
+
 #include <kitty/constructors.hpp>
 #include <kitty/dynamic_truth_table.hpp>
 #include <kitty/esop.hpp>
 #include <kitty/operations.hpp>
 #include <kitty/print.hpp>
 #include <kitty/spectral.hpp>
+
 #include <tweedledum/algorithms/synthesis/gray_synth.hpp>
+#include <tweedledum/networks/netlist.hpp>
 
 #include <easy/esop/constructors.hpp>
-#include <vector>
+
 
 namespace caterpillar
 {
@@ -71,7 +75,7 @@ public:
   }
 
   template<class Network>
-  void operator()( Network& net, kitty::dynamic_truth_table const& function, std::vector<tweedledum::qubit_id> const& qubit_map ) const
+  void operator()( Network& net,  std::vector<tweedledum::qubit_id> const& qubit_map , kitty::dynamic_truth_table const& function) const
   {
     const auto num_controls = function.num_vars();
     assert( qubit_map.size() == std::size_t( num_controls ) + 1u );
@@ -81,17 +85,17 @@ public:
     easy::esop::helliwell_maxsat_params ps;
     auto const& esop = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function, cost_fn );
 
-    std::vector<uint32_t> target = {qubit_map.back()};
+    std::vector<tweedledum::qubit_id> target = {qubit_map.back()};
     for (auto const& cube : esop )
     {
-      std::vector<uint32_t> controls, negations;
+      std::vector<tweedledum::qubit_id> controls, negations;
       auto bits = cube._bits;
       auto mask = cube._mask;
       for (auto v = 0; v < num_controls; ++v) {
         if (mask & 1) {
-          controls.push_back(qubit_map[v]);
+          controls.push_back(tweedledum::qubit_id(qubit_map[v]) );
           if (!(bits & 1)) {
-            negations.push_back(qubit_map[v]);
+            negations.push_back(tweedledum::qubit_id(qubit_map[v]) );
           }
         }
         bits >>= 1;

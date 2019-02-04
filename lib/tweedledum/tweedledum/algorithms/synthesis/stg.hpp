@@ -38,7 +38,7 @@ struct stg_from_pkrm {
 	 */
 	template<class Network>
 	void operator()(Network& network, std::vector<qubit_id> const& qubits,
-	                kitty::dynamic_truth_table const& function)
+	                kitty::dynamic_truth_table const& function) const
 	{
 		const auto num_controls = function.num_vars();
 		assert(qubits.size() == static_cast<std::size_t>(num_controls) + 1u);
@@ -76,7 +76,7 @@ struct stg_from_pprm {
 	 */
 	template<class Network>
 	void operator()(Network& network, std::vector<qubit_id> const& qubits,
-	                kitty::dynamic_truth_table const& function)
+	                kitty::dynamic_truth_table const& function) const
 	{
 		const auto num_controls = function.num_vars();
 		assert(qubits.size() == static_cast<std::size_t>(num_controls) + 1u);
@@ -122,7 +122,7 @@ struct stg_from_spectrum {
 	 */
 	template<class Network>
 	void operator()(Network& network, std::vector<qubit_id> const& qubits,
-	                kitty::dynamic_truth_table const& function)
+	                kitty::dynamic_truth_table const& function) const
 	{
 		const auto num_controls = function.num_vars();
 		assert((num_controls + 1u) <= 32u);

@@ -54,8 +54,7 @@ std::optional<LogicNetwork> circuit_to_logic_network( QuantumCircuit const& circ
 
     std::vector<signal<LogicNetwork>> controls;
     n.gate.foreach_control([&](auto c) {
-      // TODO: at the moment only positive controls are assumed
-      controls.push_back(qubit_to_signal[c]);
+      controls.push_back(qubit_to_signal[c] ^ c.is_complemented());
     });
 
     const auto ctrl_signal = ntk.create_nary_and( controls );

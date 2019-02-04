@@ -47,6 +47,41 @@ TEST_CASE("Convert simple reversible circuit to XAG", "[circuit_to_logic_network
   CHECK( simulate<kitty::dynamic_truth_table>( *ntk, sim )[0] == dfunction );
 }
 
+TEST_CASE("Convert simple reversible circuit with negated controls to XAG", "[circuit_to_logic_network]")
+{
+  using namespace caterpillar;
+  using namespace mockturtle;
+  using namespace tweedledum;
+
+  netlist<mcmt_gate> circ;
+  const auto a = circ.add_qubit();
+  const auto b = circ.add_qubit();
+  const auto c = circ.add_qubit();
+  const auto d = circ.add_qubit();
+  const auto e = circ.add_qubit();
+
+  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!a, !b}}, {d} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!c, d}}, {e} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!a, !b}}, {d} );
+
+  const auto ntk = circuit_to_logic_network<xag_network>( circ, {a, b, c}, {e} );
+
+  CHECK( ntk );
+  CHECK( ntk->num_pis() == 3u );
+  CHECK( ntk->num_pos() == 1u );
+
+  kitty::static_truth_table<3> function;
+  kitty::create_from_hex_string( function, "01" );
+
+  CHECK( simulate<kitty::static_truth_table<3>>( *ntk )[0] == function );
+
+  kitty::dynamic_truth_table dfunction( 3u );
+  kitty::create_from_binary_string( dfunction, "00000001" );
+
+  default_simulator<kitty::dynamic_truth_table> sim( dfunction.num_vars() );
+  CHECK( simulate<kitty::dynamic_truth_table>( *ntk, sim )[0] == dfunction );
+}
+
 TEST_CASE("Convert incrementer XAG", "[circuit_to_logic_network]")
 {
   using namespace caterpillar;

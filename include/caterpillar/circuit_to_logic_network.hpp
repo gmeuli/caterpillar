@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <mockturtle/traits.hpp>
-#include <tweedledum/gates/gate_kinds.hpp>
+#include <tweedledum/gates/gate_base.hpp>
 
 namespace caterpillar
 {
@@ -44,9 +44,9 @@ std::optional<LogicNetwork> circuit_to_logic_network( QuantumCircuit const& circ
   }
 
   bool error{false};
-  circ.foreach_gate([&]( auto n ) {
+  circ.foreach_cgate([&]( auto n ) {
     /* check whether gate is reversible */
-    if ( !( n.gate.is( gate_kinds_t::pauli_x) || n.gate.is( gate_kinds_t::cx ) || n.gate.is( gate_kinds_t::mcx ) ) )
+    if ( !( n.gate.is( gate_set::pauli_x ) || n.gate.is( gate_set::cx ) || n.gate.is( gate_set::mcx ) ) )
     {
       error = true;
       return false;

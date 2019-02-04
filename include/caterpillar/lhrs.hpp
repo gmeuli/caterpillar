@@ -10,18 +10,17 @@
 #include <array>
 #include <cstdint>
 #include <fmt/format.h>
+#include <mockturtle/algorithms/cut_enumeration/spectr_cut.hpp>
 #include <mockturtle/traits.hpp>
 #include <mockturtle/utils/node_map.hpp>
 #include <mockturtle/utils/stopwatch.hpp>
 #include <mockturtle/views/topo_view.hpp>
-#include <mockturtle/algorithms/cut_enumeration/spectr_cut.hpp>
 #include <stack>
 
 #include <tweedledum/algorithms/synthesis/stg.hpp>
 
 #include <variant>
 #include <vector>
-
 
 namespace caterpillar
 {
@@ -181,7 +180,7 @@ private:
     std::vector<tweedledum::qubit_id> controls;
     ntk.foreach_fanin( n, [&]( auto const& f, auto i ) {
       assert( !ntk.is_complemented( f ) );
-      controls.push_back( tweedledum::qubit_id(node_to_qubit[ntk.node_to_index( ntk.get_node( f ) )] ));
+      controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.node_to_index( ntk.get_node( f ) )] ) );
     } );
     return controls;
   }
@@ -290,7 +289,7 @@ private:
       if ( tt == clone )
       {
         const auto controls = get_fanin_as_qubits( node );
-        compute_xor_block( controls, tweedledum::qubit_id(t) );
+        compute_xor_block( controls, tweedledum::qubit_id( t ) );
       }
       else
       {
@@ -298,7 +297,7 @@ private:
         // controls directly as mapped qubits.  We assume that the inputs cannot
         // be complemented, e.g., in the case of k-LUT networks.
         const auto controls = get_fanin_as_qubits( node );
-        compute_lut( ntk.node_function( node ), controls, tweedledum::qubit_id(t) );
+        compute_lut( ntk.node_function( node ), controls, tweedledum::qubit_id( t ) );
       }
     }
   }
@@ -346,7 +345,7 @@ private:
     if constexpr ( mt::has_node_function_v<LogicNetwork> )
     {
       const auto controls = get_fanin_as_qubits( node );
-      compute_xor_block( controls, tweedledum::qubit_id(t) );
+      compute_xor_block( controls, tweedledum::qubit_id( t ) );
     }
   }
 

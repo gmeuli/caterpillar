@@ -5,8 +5,8 @@
 | Author(s): Giulia Meuli
 *-----------------------------------------------------------------------------*/
 #pragma once
-#include "mapping_strategies.hpp"
 #include "../stg_gate.hpp"
+#include "mapping_strategies.hpp"
 
 #include <array>
 #include <cstdint>
@@ -198,8 +198,8 @@ private:
         auto controls = get_fanin_as_literals<2>( node );
 
         SetQubits pol_controls;
-        ( controls[0] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )] );
-        ( controls[1] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )] );
+        pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )], controls[0] & 1 );
+        pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], controls[1] & 1 );
 
         compute_and( pol_controls, t );
         return;
@@ -212,8 +212,8 @@ private:
         auto controls = get_fanin_as_literals<2>( node );
 
         SetQubits pol_controls;
-        !( controls[0] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )] );
-        !( controls[1] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )] );
+        pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )], !( controls[0] & 1 ) );
+        pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], !( controls[1] & 1 ) );
 
         compute_or( pol_controls, t );
         return;
@@ -267,16 +267,16 @@ private:
           if ( controls[0] & 1 )
           {
             SetQubits pol_controls;
-            !( controls[1] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )] );
-            !( controls[2] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )] );
+            pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], !( controls[1] & 1 ) );
+            pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )], !( controls[2] & 1 ) );
 
             compute_or( pol_controls, tweedledum::qubit_id( t ) );
           }
           else
           {
             SetQubits pol_controls;
-            ( controls[1] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )] );
-            ( controls[2] & 1 ) ? pol_controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )], true ) ) : pol_controls.push_back( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )] );
+            pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[1] >> 1 )], controls[1] & 1 );
+            pol_controls.emplace_back( node_to_qubit[ntk.index_to_node( controls[2] >> 1 )], controls[2] & 1 );
 
             compute_and( pol_controls, tweedledum::qubit_id( t ) );
           }
@@ -363,11 +363,13 @@ private:
 
   void compute_and( SetQubits controls, uint32_t t )
   {
+    std::cout << " compute node here \n";
     qnet.add_gate( stg_gate( controls, tweedledum::qubit_id( t ) ) );
   }
 
   void compute_or( SetQubits controls, uint32_t t )
   {
+    std::cout << " compute or\n";
     qnet.add_gate( stg_gate( controls, tweedledum::qubit_id( t ) ) );
     qnet.add_gate( stg_gate( SetQubits{{}}, tweedledum::qubit_id( t ) ) );
   }

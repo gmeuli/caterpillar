@@ -61,12 +61,18 @@ public:
   }
 
   template<typename Fn>
-  void foreach_control( Fn&& fn )
+  void foreach_control( Fn&& fn ) const
   {
     for ( auto c : _controls )
     {
       fn( c );
     }
+  }
+
+  template<typename Fn>
+  void foreach_target( Fn&& fn ) const
+  {
+    fn( _target );
   }
 
 private:

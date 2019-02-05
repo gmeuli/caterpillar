@@ -1,15 +1,15 @@
 #include <catch.hpp>
 
 #include <iostream>
-#include <vector>
 #include <kitty/constructors.hpp>
 #include <kitty/dynamic_truth_table.hpp>
+#include <vector>
 
 #include <tweedledum/networks/netlist.hpp>
 
 #include <caterpillar/stg_gate.hpp>
 
-TEST_CASE("create a netlist with one stg", "[stg netlist]")
+TEST_CASE( "create a netlist with one stg", "[stg netlist]" )
 {
   using namespace caterpillar;
   using namespace tweedledum;
@@ -23,7 +23,7 @@ TEST_CASE("create a netlist with one stg", "[stg netlist]")
   kitty::dynamic_truth_table func( 3u );
   kitty::create_majority( func );
 
-  circ.add_gate( stg_gate( func, {a, qubit_id(b, true), c}, d ) );
+  circ.add_gate( stg_gate( func, {a, qubit_id( b, true ), c}, d ) );
 
   CHECK( circ.num_gates() == 1 );
   CHECK( circ.num_qubits() == 4 );
@@ -40,6 +40,6 @@ TEST_CASE("create a netlist with one stg", "[stg netlist]")
     } );
   } );
 
-  CHECK( indexes == std::vector<uint32_t> {{0, 1, 2}} );
-  CHECK( pol == std::vector<bool> {{false, true, false}} );
+  CHECK( indexes == std::vector<uint32_t>{{0, 1, 2}} );
+  CHECK( pol == std::vector<bool>{{false, true, false}} );
 }

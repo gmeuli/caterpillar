@@ -2,6 +2,7 @@
 
 #include <mockturtle/algorithms/simulation.hpp>
 #include <mockturtle/networks/aig.hpp>
+#include <mockturtle/networks/mig.hpp>
 #include <mockturtle/networks/xag.hpp>
 
 #include <tweedledum/algorithms/synthesis/stg.hpp>
@@ -26,9 +27,8 @@ TEST_CASE( "synthesize AND", "[lhrs AND test]" )
   auto o = aig.create_po( c );
 
   netlist<stg_gate> revnet;
-  logic_network_synthesis( revnet, aig, stg_from_pprm() );
-  std::cout << "and net\n"
-            << to_unicode_str( revnet );
+  logic_network_synthesis_stats st;
+  logic_network_synthesis( revnet, aig, stg_from_pprm(), {}, &st );
 
   CHECK( revnet.num_gates() == 1 );
   CHECK( revnet.num_qubits() == 3 );
@@ -41,7 +41,7 @@ TEST_CASE( "synthesize AND", "[lhrs AND test]" )
     } );
   } );
 
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( revnet, {0, 1}, {2} );
+  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( revnet, st.i_indexes, st.o_indexes );
   CHECK( ntk );
   CHECK( ntk->num_pis() == 2u );
   CHECK( ntk->num_pos() == 1u );
@@ -66,10 +66,8 @@ TEST_CASE( "synthesize OR", "[lhrs OR test]" )
   auto o = aig.create_po( c );
 
   netlist<stg_gate> revnet;
-  logic_network_synthesis( revnet, aig, stg_from_pprm() );
-
-  std::cout << "or net\n"
-            << to_unicode_str( revnet );
+  logic_network_synthesis_stats st;
+  logic_network_synthesis( revnet, aig, stg_from_pprm(), {}, &st);
 
   CHECK( revnet.num_gates() == 2 );
   CHECK( revnet.num_qubits() == 3 );
@@ -85,9 +83,10 @@ TEST_CASE( "synthesize OR", "[lhrs OR test]" )
       CHECK( c.is_complemented() == true );
       CHECK( c.index() <= 2 );
     } );
+    i++;
   } );
 
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( revnet, {0, 1}, {2} );
+  const auto ntk = circuit_to_logic_network<xag_network>( revnet, st.i_indexes, st.o_indexes );
   CHECK( ntk );
   CHECK( ntk->num_pis() == 2u );
   CHECK( ntk->num_pos() == 1u );
@@ -96,4 +95,35 @@ TEST_CASE( "synthesize OR", "[lhrs OR test]" )
   kitty::create_from_binary_string( function, "1110" );
 
   CHECK( simulate<kitty::static_truth_table<2>>( *ntk )[0] == function );
+}
+
+TEST_CASE( "synthesize multioutput maj3", "[multiout MAJ]" )
+{
+  using namespace mockturtle;
+  using namespace caterpillar;
+  using namespace tweedledum;
+
+  auto mig = mig_network();
+
+  auto a = mig.create_pi();
+  auto b = mig.create_pi();
+  auto c = mig.create_pi();
+  auto d = mig.create_maj( a, b, c );
+  mig.create_po( d );
+  mig.create_po( mig.create_not( d ) );
+  mig.create_po( d );
+
+  netlist<stg_gate> t_net;
+
+  logic_network_synthesis_stats st;
+  logic_network_synthesis( t_net, mig, stg_from_pprm(), {}, &st );
+
+  const auto ntk = circuit_to_logic_network<xag_network>( t_net, st.i_indexes, st.o_indexes );
+
+  kitty::static_truth_table<3> maj, not_maj;
+  kitty::create_from_binary_string( maj, "11101000" );
+
+  CHECK( simulate<kitty::static_truth_table<3>>( *ntk )[0] == maj );
+  CHECK( simulate<kitty::static_truth_table<3>>( *ntk )[1] == ~maj );
+  CHECK( simulate<kitty::static_truth_table<3>>( *ntk )[2] == maj );
 }

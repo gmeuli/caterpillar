@@ -59,6 +59,13 @@ struct logic_network_synthesis_stats
   /*! \brief Required number of ancilla. */
   uint32_t required_ancillae{0u};
 
+  /*! \brief output qubits. */
+  std::vector<uint32_t> o_indexes;
+
+  /*! \brief input qubits. */
+  std::vector<uint32_t> i_indexes;
+
+
   void report() const
   {
     std::cout << fmt::format( "[i] total time = {:>5.2f} secs\n", mockturtle::to_seconds( time_total ) );
@@ -121,6 +128,8 @@ public:
           action );
     } );
 
+    prepare_outputs();
+
     return result;
   }
 
@@ -130,6 +139,7 @@ private:
     /* prepare primary inputs of logic network */
     ntk.foreach_pi( [&]( auto n ) {
       node_to_qubit[n] = qnet.num_qubits();
+      st.i_indexes.push_back( node_to_qubit[n] );
       qnet.add_qubit();
     } );
   }
@@ -162,6 +172,35 @@ private:
       free_ancillae.pop();
       return r;
     }
+  }
+
+  void prepare_outputs()
+  {
+    std::unordered_map<mt::node<LogicNetwork>, mt::signal<LogicNetwork>> node_to_signals;
+    ntk.foreach_po( [&]( auto s, auto i ) {
+      auto node = ntk.get_node( s );
+
+      if ( const auto it = node_to_signals.find( node ); it != node_to_signals.end() ) //node previously referred
+      {
+        auto new_i = request_ancilla();
+
+        qnet.add_gate( stg_gate( SetQubits{{node_to_qubit[ntk.node_to_index( node )]}}, new_i ) );
+        if ( ntk.is_complemented( s ) != ntk.is_complemented( node_to_signals[node] ) )
+        {
+          qnet.add_gate( stg_gate( SetQubits{{}}, new_i ) );
+        }
+        st.o_indexes.push_back( new_i );
+      }
+      else //node never referred
+      {
+        if ( ntk.is_complemented( s ) )
+        {
+          qnet.add_gate( stg_gate( SetQubits{{}}, node_to_qubit[ntk.node_to_index( node )] ) );
+        }
+        node_to_signals[node] = s;
+        st.o_indexes.push_back( node_to_qubit[ntk.node_to_index( node )] );
+      }
+    } );
   }
 
   void release_ancilla( uint32_t q )
@@ -363,13 +402,11 @@ private:
 
   void compute_and( SetQubits controls, uint32_t t )
   {
-    std::cout << " compute node here \n";
     qnet.add_gate( stg_gate( controls, tweedledum::qubit_id( t ) ) );
   }
 
   void compute_or( SetQubits controls, uint32_t t )
   {
-    std::cout << " compute or\n";
     qnet.add_gate( stg_gate( controls, tweedledum::qubit_id( t ) ) );
     qnet.add_gate( stg_gate( SetQubits{{}}, tweedledum::qubit_id( t ) ) );
   }
@@ -485,7 +522,7 @@ private:
   logic_network_synthesis_stats& st;
   mt::node_map<uint32_t, LogicNetwork> node_to_qubit;
   std::stack<uint32_t> free_ancillae;
-};
+}; // namespace detail
 
 } // namespace detail
 

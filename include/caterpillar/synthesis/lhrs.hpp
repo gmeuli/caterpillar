@@ -99,7 +99,7 @@ public:
     const auto result = strategy.foreach_step( [&]( auto node, auto action ) {
       std::visit(
           overloaded{
-              []( auto arg ) {},
+              []( auto ) {},
               [&]( compute_action const& ) {
                 const auto t = node_to_qubit[node] = request_ancilla();
                 if ( ps.verbose )
@@ -221,7 +221,7 @@ private:
   SetQubits get_fanin_as_qubits( mt::node<LogicNetwork> const& n )
   {
     SetQubits controls;
-    ntk.foreach_fanin( n, [&]( auto const& f, auto i ) {
+    ntk.foreach_fanin( n, [&]( auto const& f ) {
       assert( !ntk.is_complemented( f ) );
       controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.node_to_index( ntk.get_node( f ) )] ) );
     } );

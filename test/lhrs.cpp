@@ -23,7 +23,7 @@ TEST_CASE( "synthesize AND", "[lhrs AND test]" )
   auto a = aig.create_pi();
   auto b = aig.create_pi();
   auto c = aig.create_and( a, b );
-  auto o = aig.create_po( c );
+  /*auto o = */aig.create_po( c );
 
   netlist<stg_gate> revnet;
   logic_network_synthesis( revnet, aig, stg_from_pprm() );
@@ -63,7 +63,7 @@ TEST_CASE( "synthesize OR", "[lhrs OR test]" )
   auto a = aig.create_pi();
   auto b = aig.create_pi();
   auto c = aig.create_or( a, b );
-  auto o = aig.create_po( c );
+  /*auto o = */aig.create_po( c );
 
   netlist<stg_gate> revnet;
   logic_network_synthesis( revnet, aig, stg_from_pprm() );

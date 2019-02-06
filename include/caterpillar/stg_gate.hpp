@@ -22,7 +22,11 @@ class stg_gate : public td::gate_base
 {
 
 public:
-  stg_gate( gate_base const& op, td::qubit_id target ) : td::gate_base( op ) {}
+  stg_gate( gate_base const& op, td::qubit_id target )
+    : td::gate_base( op )
+  {
+    (void)target;
+  }
 
   stg_gate( kitty::dynamic_truth_table const& function, std::vector<td::qubit_id> const& controls, td::qubit_id target )
       : gate_base( td::gate_set::num_defined_ops ),

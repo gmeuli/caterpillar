@@ -145,7 +145,7 @@ public:
   {
     for ( const auto& m : matrix )
     {
-      for ( auto i = 0; i < m.num_bits(); ++i )
+      for ( auto i = 0u; i < m.num_bits(); ++i )
       {
         os << m[i];
       }
@@ -188,7 +188,7 @@ public:
     for ( const auto& row : matrix )
     {
       std::vector<int> clause;
-      for ( auto i = 0; i < row.num_bits()-1u; ++i )
+      for ( auto i = 0u; i < row.num_bits()-1u; ++i )
       {
         if ( row[i] )
         {

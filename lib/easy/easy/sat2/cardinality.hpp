@@ -113,7 +113,7 @@ inline void increase_totalizer_internal( std::vector<std::vector<int>>& dest, in
   {
     auto const max_j = std::min( rhs-i, uint32_t( bv.size() ) );
     auto const min_j = std::max( int( last ) - int( i ) + 1, 1 );
-    for ( auto j = min_j; j <= max_j; ++j )
+    for ( int j = min_j; j <= int(max_j); ++j )
     {
       dest.emplace_back( std::vector<int>{ -av[i-1], -bv[j-1], ov[i+j-1] } );
     }

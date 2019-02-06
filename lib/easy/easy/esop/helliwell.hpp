@@ -241,7 +241,7 @@ public:
    * \param bits Truth table of function
    * \param care Truth table of care function
    */
-  esop_t synthesize( TT const& bits, TT const& care, std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { return 1; } )
+  esop_t synthesize( TT const& bits, TT const& care, std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { (void)cube; return 1; } )
   {
     assert( bits.num_vars() == care.num_vars() );
 
@@ -282,7 +282,7 @@ public:
    *
    * \param bits Truth table of function
    */
-  esop_t synthesize( TT const& bits, std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { return 1; } )
+  esop_t synthesize( TT const& bits, std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { (void)cube; return 1; } )
   {
     auto const care = kitty::create<TT>( bits.num_vars() );
     return synthesize( bits, ~care, cost_fn );

@@ -59,7 +59,7 @@ public:
       auto sum = 0u;
       for ( const auto& l : cl )
       {
-        assert( abs( l ) < _num_vars );
+        assert( (uint32_t)(abs( l )) < _num_vars );
         row.set_bit( abs( l ) - 1 );
         sum += l < 0;
       }
@@ -185,6 +185,7 @@ public:
 
   void cnf_from_matrix( std::vector<std::vector<int>>& clauses, std::vector<utils::dynamic_bitset<>> const& matrix )
   {
+    (void)clauses;
     for ( const auto& row : matrix )
     {
       std::vector<int> clause;
@@ -210,6 +211,7 @@ public:
 
   void cnf_from_xor_clauses( std::vector<std::vector<int>>& clauses, std::vector<std::vector<int>> const& xor_clauses )
   {
+    (void)clauses;
     for ( const auto& xor_clause : xor_clauses )
     {
       add_xor_clause( _clauses, xor_clause );

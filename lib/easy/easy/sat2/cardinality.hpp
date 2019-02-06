@@ -50,7 +50,7 @@ struct totalizer_tree
   std::vector<int> vars;
   uint32_t num_inputs;
   std::shared_ptr<totalizer_tree> left;
-  std::shared_ptr<totalizer_tree> right; 
+  std::shared_ptr<totalizer_tree> right;
 }; /* totalizer_tree */
 
 namespace detail
@@ -58,6 +58,8 @@ namespace detail
 
 inline void create_totalizer_internal( std::vector<std::vector<int>>& dest, int& sid, std::vector<int> const& ov, uint32_t rhs, std::vector<int> const& av, std::vector<int> const& bv )
 {
+  (void)sid;
+
   /* i = 0 */
   uint32_t kmin = std::min( rhs, uint32_t( bv.size() ) );
   for ( auto j = 0u; j < kmin; ++j )
@@ -71,7 +73,7 @@ inline void create_totalizer_internal( std::vector<std::vector<int>>& dest, int&
   {
     dest.emplace_back( std::vector<int>{ -av[i], ov[i] } );
   }
-  
+
   /* i, j > 0 */
   for ( auto i = 1u; i <= kmin; ++i )
   {
@@ -80,7 +82,7 @@ inline void create_totalizer_internal( std::vector<std::vector<int>>& dest, int&
     {
       dest.emplace_back( std::vector<int>{ -av[i-1], -bv[j-1], ov[i+j-1] } );
     }
-  }  
+  }
 }
 
 inline void increase_totalizer_internal( std::vector<std::vector<int>>& dest, int& sid, std::vector<int>& ov, uint32_t rhs, std::vector<int>& av, std::vector<int>& bv )

@@ -71,7 +71,7 @@ private:
 struct stg_from_exact_synthesis
 {
 public:
-  explicit stg_from_exact_synthesis( std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { return 1; } )
+  explicit stg_from_exact_synthesis( std::function<int( kitty::cube )> const& cost_fn = []( kitty::cube const& cube ) { (void)cube; return 1; } )
       : cost_fn( cost_fn )
   {
   }

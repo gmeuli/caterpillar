@@ -730,7 +730,7 @@ public:
           }
 
           /* updating bounds and weights */
-          if ( b < t->vars.size() )
+          if ( (unsigned long)(b) < t->vars.size() )
           {
             auto lnew = -t->vars[b];
             if ( std::find( std::begin( garbage ), std::end( garbage ), lnew ) != std::end( garbage ) )

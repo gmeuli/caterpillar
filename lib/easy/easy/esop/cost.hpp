@@ -40,7 +40,7 @@ namespace easy::esop
  */
 inline uint64_t T_count( kitty::cube const& cube, uint32_t num_vars )
 {
-  auto const ac = cube.num_literals();
+  uint32_t const ac = cube.num_literals();
 
   switch( ac )
   {

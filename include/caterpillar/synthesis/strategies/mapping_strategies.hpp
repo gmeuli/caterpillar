@@ -3,9 +3,13 @@
 | See accompanying file /LICENSE for details.
 | Author(s): Mathias Soeken and Giulia Meuli
 *-----------------------------------------------------------------------------*/
-#include <cstdint>
 
-#include "sat.hpp"
+#pragma once
+
+#include <cstdint>
+#include <unordered_set>
+
+#include "../sat.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
 #include <mockturtle/views/topo_view.hpp>

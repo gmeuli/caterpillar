@@ -8,6 +8,7 @@
 #include "sat.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
+#include <mockturtle/views/topo_view.hpp>
 
 namespace caterpillar
 {

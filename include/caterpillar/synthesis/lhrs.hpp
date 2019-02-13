@@ -6,7 +6,7 @@
 *-----------------------------------------------------------------------------*/
 #pragma once
 #include "../stg_gate.hpp"
-#include "mapping_strategies.hpp"
+#include "./strategies/mapping_strategies.hpp"
 
 #include <array>
 #include <cstdint>

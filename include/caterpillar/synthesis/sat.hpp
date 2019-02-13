@@ -3,6 +3,8 @@
 | See accompanying file /LICENSE for details.
 | Author(s): Giulia Meuli
 *-----------------------------------------------------------------------------*/
+#pragma once
+
 #include <cstdint>
 #include <unordered_map>
 #include <variant>

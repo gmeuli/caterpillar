@@ -483,7 +483,8 @@ private:
     }
     else
     {
-      std::cerr << "[e] target does not match any control in in-place\n";
+      //std::cerr << "[e] target does not match any control in in-place\n";
+      qnet.add_gate( stg_gate( SetQubits{{c1}}, t ) );
     }
     if ( inv )
       qnet.add_gate( stg_gate( SetQubits{{}}, t ) );
@@ -508,7 +509,9 @@ private:
     }
     else
     {
-      std::cerr << "[e] target does not match any control in in-place\n";
+      //std::cerr << "[e] target does not match any control in in-place\n";
+      qnet.add_gate( stg_gate( SetQubits{{c1}}, t ) );
+      qnet.add_gate( stg_gate( SetQubits{{c2}}, t ) );
     }
     if ( inv )
       qnet.add_gate( stg_gate( SetQubits{{}}, t ) );

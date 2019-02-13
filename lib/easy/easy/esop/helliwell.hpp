@@ -38,7 +38,7 @@ namespace easy::esop
 namespace detail
 {
 
-std::vector<uint32_t> compute_flips( uint32_t n )
+inline std::vector<uint32_t> compute_flips( uint32_t n )
 {
   auto const size = ( 1u << n );
   auto const total_flips = size - 1;
@@ -56,7 +56,7 @@ std::vector<uint32_t> compute_flips( uint32_t n )
   return flip_vec;
 }
 
-std::vector<kitty::cube> compute_implicants( const kitty::cube& c, uint32_t num_vars )
+inline std::vector<kitty::cube> compute_implicants( const kitty::cube& c, uint32_t num_vars )
 {
   const auto flips = compute_flips( num_vars );
 
@@ -182,7 +182,7 @@ void derive_xor_clauses( std::vector<std::vector<int>>& xor_clauses, helliwell_d
   } while ( minterm._bits < ( 1u << bits.num_vars() ) );
 }
 
-esop_t esop_from_model( sat2::model const& m, helliwell_decision_variables const& g )
+inline esop_t esop_from_model( sat2::model const& m, helliwell_decision_variables const& g )
 {
   esop_t esop;
   for ( const auto& v : g )
@@ -195,7 +195,7 @@ esop_t esop_from_model( sat2::model const& m, helliwell_decision_variables const
   return esop;
 }
 
-esop_t esop_from_clause_selectors( std::vector<int> const& sels, helliwell_decision_variables const& g, std::unordered_map<int, int> soft_clause_map )
+inline esop_t esop_from_clause_selectors( std::vector<int> const& sels, helliwell_decision_variables const& g, std::unordered_map<int, int> soft_clause_map )
 {
   esop_t esop;
   for ( const auto& s : sels )
@@ -205,7 +205,7 @@ esop_t esop_from_clause_selectors( std::vector<int> const& sels, helliwell_decis
   return esop;
 }
 
-std::vector<std::vector<int>> translate_to_cnf( int& sid, std::vector<std::vector<int>> const& xcnf, uint32_t num_vars )
+inline std::vector<std::vector<int>> translate_to_cnf( int& sid, std::vector<std::vector<int>> const& xcnf, uint32_t num_vars )
 {
   return sat2::cnf_from_xcnf( sid, xcnf, num_vars ).get();
 }

@@ -5,13 +5,15 @@
 #include <mockturtle/networks/mig.hpp>
 #include <mockturtle/networks/xag.hpp>
 
+
+#include <caterpillar/synthesis/lhrs.hpp>
+#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/verification/circuit_to_logic_network.hpp>
+
+
 #include <tweedledum/algorithms/synthesis/stg.hpp>
 #include <tweedledum/io/write_unicode.hpp>
 #include <tweedledum/networks/netlist.hpp>
-
-#include <caterpillar/stg_gate.hpp>
-#include <caterpillar/synthesis/lhrs.hpp>
-#include <caterpillar/verification/circuit_to_logic_network.hpp>
 
 TEST_CASE( "synthesize AND", "[lhrs AND test]" )
 {

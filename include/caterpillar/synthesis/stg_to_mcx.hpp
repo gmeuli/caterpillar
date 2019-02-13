@@ -18,14 +18,14 @@
 #include <kitty/esop.hpp>
 #include <kitty/operations.hpp>
 #include <kitty/print.hpp>
-#include <kitty/spectral.hpp>
 #include <kitty/properties.hpp>
+#include <kitty/spectral.hpp>
 
 #include <tweedledum/algorithms/synthesis/gray_synth.hpp>
 #include <tweedledum/networks/netlist.hpp>
 
-#include <easy/esop/cost.hpp>
 #include <easy/esop/constructors.hpp>
+#include <easy/esop/cost.hpp>
 
 namespace caterpillar
 {
@@ -81,7 +81,7 @@ public:
     const auto num_vars = function.num_vars();
     for ( auto i = 0; i < num_vars; ++i )
     {
-      for ( auto j = i+1; j < num_vars; ++j )
+      for ( auto j = i + 1; j < num_vars; ++j )
       {
         if ( !kitty::is_symmetric_in( function, i, j ) )
         {
@@ -112,22 +112,31 @@ public:
     }
     else if ( is_totally_symmetric( function ) )
     {
-      esop = kitty::esop_from_optimum_pkrm( function );;
+      esop = kitty::esop_from_optimum_pkrm( function );
       cache.emplace( function, esop );
     }
     else
     {
       auto const& pprm = kitty::esop_from_pprm( function );
       auto const& pkrm = kitty::esop_from_optimum_pkrm( function );
-      auto const& exact = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function, cost_fn );
 
-      auto const pprm_Tcost  = easy::esop::T_count( pprm, num_controls );
-      auto const pkrm_Tcost  = easy::esop::T_count( pkrm, num_controls );
-      auto const exact_Tcost = easy::esop::T_count( exact, num_controls );
+      if ( function.num_vars() >= 5 && pkrm.size() >= 8 )
+      {
+        esop = pkrm;
+        cache.emplace( function, esop );
+      }
+      else
+      {
+        auto const& exact = easy::esop::esop_from_tt<kitty::dynamic_truth_table, easy::sat2::maxsat_rc2, easy::esop::helliwell_maxsat>( stats, ps ).synthesize( function, cost_fn );
 
-      auto const min = std::min( exact_Tcost, std::min( pprm_Tcost, pkrm_Tcost ) );
-      esop = ( min == exact_Tcost ? exact : ( min == pkrm_Tcost ? pkrm : pprm ) );
-      cache.emplace( function, esop );
+        auto const pprm_Tcost = easy::esop::T_count( pprm, num_controls );
+        auto const pkrm_Tcost = easy::esop::T_count( pkrm, num_controls );
+        auto const exact_Tcost = easy::esop::T_count( exact, num_controls );
+
+        auto const min = std::min( exact_Tcost, std::min( pprm_Tcost, pkrm_Tcost ) );
+        esop = ( min == exact_Tcost ? exact : ( min == pkrm_Tcost ? pkrm : pprm ) );
+        cache.emplace( function, esop );
+      }
     }
 
     std::vector<tweedledum::qubit_id> target = {qubit_map.back()};

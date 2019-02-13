@@ -1,8 +1,9 @@
 
 #include <catch.hpp>
+
+#include <caterpillar/synthesis/lhrs.hpp>
 #include <caterpillar/synthesis/strategies/xag_mapping_strategy.hpp>
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
-#include <caterpillar/synthesis/lhrs.hpp>
 #include <mockturtle/networks/xag.hpp>
 #include <tweedledum/networks/netlist.hpp>
 #include <tweedledum/io/write_unicode.hpp>

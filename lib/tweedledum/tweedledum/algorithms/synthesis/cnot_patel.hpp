@@ -80,6 +80,9 @@ private:
 					pattern |= (matrix_.at(row, column) << subrow_column);
 					subrow_column += 1;
 				}
+				if (pattern == 0) {
+					continue;
+				}
 				if (patterns_table.find(pattern) != patterns_table.end()) {
 					matrix_.row(row) ^= matrix_.row(patterns_table[pattern]);
 					gates.emplace_back(patterns_table[pattern], row);
@@ -129,7 +132,9 @@ struct cnot_patel_params {
 
 /*! \brief CNOT Patel synthesis for linear circuits
  *
- * A specialzed variant of `cnot_patel` which accepts a existing network (possibly with gates).
+ * This is the in-place variant of ``cnot_patel``, in which the network is passed as a parameter
+ * and can potentially already contain some gates. The parameter ``qubits`` provides a qubit
+ * mapping to the existing qubits in the network.
  *
  * \param network A quantum network
  * \param qubits  The subset of qubits the linear reversible circuit acts upon.
@@ -144,7 +149,8 @@ void cnot_patel(Network& network, std::vector<qubit_id> const& qubits, Matrix co
 	assert(network.num_qubits() >= qubits.size());
 	assert(matrix.is_square());
 	assert(qubits.size() == matrix.num_rows());
-	assert(params.best_partition_size || (params.partition_size >= 1 && params.partition_size <= 32));
+	assert(params.best_partition_size
+	       || (params.partition_size < 32u && params.partition_size <= matrix.num_rows()));
 
 	// Abbreviations:
 	//   - ps : partition size
@@ -155,7 +161,7 @@ void cnot_patel(Network& network, std::vector<qubit_id> const& qubits, Matrix co
 	}
 
 	auto const min_ps = params.best_partition_size ? 1u : params.partition_size;
-	auto const max_ps = params.best_partition_size ? 32u : params.partition_size;
+	auto const max_ps = params.best_partition_size ? matrix.num_rows() : params.partition_size;
 	auto const old_num_gates = network.num_gates();
 	auto best_num_gates = std::numeric_limits<uint32_t>::max();
 

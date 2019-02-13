@@ -62,11 +62,11 @@ public:
 	/*! \brief Extract parity term. */
 	auto extract_term(uint32_t term)
 	{
-		auto node_handle = term_to_angle_.find(term);
-		if (node_handle == term_to_angle_.end()) {
+		auto node_handle = term_to_angle_.extract(term);
+		if (node_handle.empty()) {
 			return angle(0.0);
 		}
-		return node_handle -> second;
+		return node_handle.mapped();
 	}
 #pragma endregion
 

@@ -76,7 +76,7 @@ public:
 			assert(target <= network_max_num_qubits);
 			targets_ |= (1u << target);
 		}
-		//assert((targets_ & controls_) == 0u);
+		assert((targets_ & controls_) == 0u);
 	}
 #pragma endregion
 
@@ -91,6 +91,16 @@ public:
 	{
 		assert(!is_meta());
 		return __builtin_popcount(targets_);
+	}
+
+	auto is_control(qubit_id qid) const
+	{
+		return (controls_ & (1u << qid.index()));
+	}
+
+	auto qubit_slot(qubit_id qid) const
+	{
+		return qid.index();
 	}
 #pragma endregion
 

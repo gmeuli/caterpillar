@@ -1,12 +1,15 @@
 
 #include <catch.hpp>
 #include <caterpillar/synthesis/strategies/xag_mapping_strategy.hpp>
+#include <caterpillar/verification/circuit_to_logic_network.hpp>
 #include <caterpillar/synthesis/lhrs.hpp>
 #include <mockturtle/networks/xag.hpp>
 #include <tweedledum/networks/netlist.hpp>
 #include <tweedledum/io/write_unicode.hpp>
 #include <mockturtle/io/write_bench.hpp>
 #include <caterpillar/stg_gate.hpp>
+#include <mockturtle/algorithms/simulation.hpp>
+#include <kitty/static_truth_table.hpp>
 
 
 TEST_CASE("synthesize simple xag", "[XAG synthesis]")
@@ -64,10 +67,16 @@ TEST_CASE("synthesize simple xag 2", "[XAG synthesis-2]")
   netlist<stg_gate> qnet;
 
   logic_network_synthesis_params ps;
+  logic_network_synthesis_stats st;
   //ps.verbose = true;
 
-  logic_network_synthesis<netlist<stg_gate>, xag_network, xag_mapping_strategy>( qnet, xag, {}, ps );
+  logic_network_synthesis<netlist<stg_gate>, xag_network, xag_mapping_strategy>( qnet, xag, {}, ps, &st );
 
+  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
+  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
+  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
+  
   CHECK(qnet.num_gates() == 14);
+  CHECK(tt_xag == tt_ntk);
   
 }

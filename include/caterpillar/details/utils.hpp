@@ -18,6 +18,9 @@ namespace caterpillar::detail
     case 2u:
       return 7;
 
+    case 3u:
+      return 16;
+      
     default:
       if ( lines - tof_controls - 1 >= ( tof_controls - 1 ) / 2 )
       {

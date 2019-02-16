@@ -226,7 +226,7 @@ private:
           ++it;
           if ( cell != po )
           {
-            it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = _steps.emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
           }
 
           return true;

@@ -12,7 +12,7 @@
 #include <tweedledum/io/write_unicode.hpp>
 #include <tweedledum/networks/netlist.hpp>
 
-TEST_CASE( "Eager mapping strategy for 3-bit sorting network", "[circuit_to_logic_network]" )
+TEST_CASE( "Eager mapping strategy for 3-bit sorting network", "[eager_mapping_strategy]" )
 {
   using namespace caterpillar;
   using namespace caterpillar::detail;

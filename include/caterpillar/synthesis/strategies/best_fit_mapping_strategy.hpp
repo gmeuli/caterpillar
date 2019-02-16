@@ -286,7 +286,7 @@ private:
   mapping_strategy_params _ps;
 
   /* some parameters that need to be extracted */
-  uint32_t cut_size = 3u;
+  uint32_t cut_size = 16u;
 
   std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> _steps;
 };

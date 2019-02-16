@@ -74,7 +74,6 @@ private:
       _ref_counts[n] = _ntk.fanout_size( n );
     } );
     _ntk.foreach_po( [&]( auto f ) {
-      _ref_counts[f]++;
       _pos.insert( _ntk.get_node( f ) );
     } );
   }

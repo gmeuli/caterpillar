@@ -29,17 +29,6 @@ using SetQubits = std::vector<Qubit>;
 namespace caterpillar
 {
 
-namespace detail
-{
-template<class... Ts>
-struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template<class... Ts>
-overloaded( Ts... )->overloaded<Ts...>;
-} // namespace detail
-
 namespace mt = mockturtle;
 
 struct logic_network_synthesis_params

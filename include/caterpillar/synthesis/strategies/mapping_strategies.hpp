@@ -7,15 +7,30 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <unordered_set>
 
+#include "action.hpp"
 #include "../sat.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
 #include <mockturtle/views/topo_view.hpp>
 
+#include <fmt/format.h>
+
 namespace caterpillar
 {
+
+namespace detail
+{
+template<class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template<class... Ts>
+overloaded( Ts... )->overloaded<Ts...>;
+} // namespace detail
 
 namespace mt = mockturtle;
 

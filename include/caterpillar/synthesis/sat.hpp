@@ -15,25 +15,11 @@
 #include <mockturtle/views/fanout_view.hpp>
 #include <percy/solvers/bsat2.hpp>
 #include <algorithm>
+
+#include "strategies/action.hpp"
+
 namespace caterpillar
 {
-
-struct compute_action
-{
-};
-struct uncompute_action
-{
-};
-struct compute_inplace_action
-{
-  uint32_t target_index;
-};
-struct uncompute_inplace_action
-{
-  uint32_t target_index;
-};
-
-using mapping_strategy_action = std::variant<compute_action, uncompute_action, compute_inplace_action, uncompute_inplace_action>;
 
 template<typename Network>
 class pebble_solver

@@ -2,6 +2,7 @@ build/
 examples/
 build-*/
 .vscode/
+**/.DS_Store
 
 # Bench
 *.aig

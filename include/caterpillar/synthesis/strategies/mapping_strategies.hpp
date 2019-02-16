@@ -288,4 +288,27 @@ private:
   std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> steps;
 };
 
+template<class MappingStrategy>
+void print_mapping_strategy( MappingStrategy const& strategy, std::ostream& os = std::cout )
+{
+  strategy.foreach_step( [&]( auto node, auto action ) {
+    std::visit(
+        detail::overloaded{
+            []( auto ) {},
+            [&]( compute_action const& ) {
+              os << fmt::format( "compute({})\n", node );
+            },
+            [&]( uncompute_action const& ) {
+              os << fmt::format( "uncompute({})\n", node );
+            },
+            [&]( compute_inplace_action const& action ) {
+              os << fmt::format( "compute_inplace({} -> {})\n", node, action.target_index );
+            },
+            [&]( uncompute_inplace_action const& action ) {
+              os << fmt::format( "uncompute_inplace({} -> {})\n", node, action.target_index );
+            }},
+        action );
+  } );
+}
+
 } // namespace caterpillar

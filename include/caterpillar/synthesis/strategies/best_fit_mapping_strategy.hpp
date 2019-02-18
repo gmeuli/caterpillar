@@ -20,6 +20,8 @@
 #include <mockturtle/views/cut_view.hpp>
 #include <mockturtle/views/mapping_view.hpp>
 
+#include <fmt/format.h>
+
 #include "eager_mapping_strategy.hpp"
 #include "mapping_strategies.hpp"
 
@@ -175,7 +177,7 @@ private:
       mt::mapping_view<decltype( cut ), true> mapped_cut{cut};
       mt::lut_mapping_params lm_ps;
       uint32_t best_cut_size = leaves.size();
-      while ( best_cut_size > 2 )
+      while ( best_cut_size > cut_lower_bound )
       {
         lm_ps.cut_enumeration_ps.cut_size = best_cut_size - 1;
         mt::lut_mapping<decltype( mapped_cut ), true>( mapped_cut, lm_ps );
@@ -208,8 +210,12 @@ private:
       }
       else
       {
+        lm_ps.cut_enumeration_ps.cut_size = best_cut_size;
+        mt::lut_mapping<decltype( mapped_cut ), true>( mapped_cut, lm_ps );
+
         auto it = _steps.end();
         mt::node<LogicNetwork> po;
+        bool is_computing = std::holds_alternative<compute_action>( action );
         cut.foreach_po( [&]( auto f ) {
           po = cut.get_node( f );
           return false;
@@ -222,10 +228,23 @@ private:
             cell_leaves.push_back( _ntk.node_to_index( fanin ) );
           } );
 
-          it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
-          ++it;
-          if ( cell != po )
+          if ( cell == po )
           {
+            if ( is_computing )
+            {
+              it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            }
+            else
+            {
+              it = _steps.emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            }
+            
+            ++it;
+          }
+          else
+          {
+            it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            ++it;
             it = _steps.emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
           }
 
@@ -287,6 +306,7 @@ private:
 
   /* some parameters that need to be extracted */
   uint32_t cut_size = 16u;
+  uint32_t cut_lower_bound = 4u;
 
   std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> _steps;
 };

@@ -122,7 +122,7 @@ TEST_CASE( "synthesize multioutput maj3", "[multiout MAJ]" )
 
   const auto ntk = circuit_to_logic_network<xag_network>( t_net, st.i_indexes, st.o_indexes );
 
-  kitty::static_truth_table<3> maj, not_maj;
+  kitty::static_truth_table<3> maj;
   kitty::create_from_binary_string( maj, "11101000" );
 
   CHECK( simulate<kitty::static_truth_table<3>>( *ntk )[0] == maj );

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
+#include <caterpillar/stg_gate.hpp>
 #include <kitty/dynamic_truth_table.hpp>
 #include <kitty/constructors.hpp>
 #include <kitty/static_truth_table.hpp>
@@ -18,7 +19,7 @@ TEST_CASE("Convert simple reversible circuit to XAG", "[circuit_to_logic_network
   using namespace mockturtle;
   using namespace tweedledum;
 
-  netlist<mcmt_gate> circ;
+  netlist<stg_gate> circ;
   const auto a = circ.add_qubit();
   const auto b = circ.add_qubit();
   const auto c = circ.add_qubit();
@@ -53,7 +54,7 @@ TEST_CASE("Convert simple reversible circuit with negated controls to XAG", "[ci
   using namespace mockturtle;
   using namespace tweedledum;
 
-  netlist<mcmt_gate> circ;
+  netlist<stg_gate> circ;
   const auto a = circ.add_qubit();
   const auto b = circ.add_qubit();
   const auto c = circ.add_qubit();
@@ -88,7 +89,7 @@ TEST_CASE("Convert incrementer XAG", "[circuit_to_logic_network]")
   using namespace mockturtle;
   using namespace tweedledum;
 
-  netlist<mcmt_gate> circ;
+  netlist<stg_gate> circ;
   const auto a = circ.add_qubit();
   const auto b = circ.add_qubit();
   const auto c = circ.add_qubit();

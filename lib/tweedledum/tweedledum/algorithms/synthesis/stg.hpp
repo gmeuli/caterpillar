@@ -28,7 +28,7 @@ struct stg_from_esop_params {};
 
 /*! \brief Synthesize a quantum network from a function by computing exact ESOP representation
  */
-/*struct stg_from_exact_esop {
+//struct stg_from_exact_esop {
 	/*! \brief Synthesize into a _existing_ quantum network
 	 *
 	 * \param network  A quantum network

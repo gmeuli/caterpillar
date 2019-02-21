@@ -23,7 +23,7 @@
 #include <fmt/format.h>
 
 #include "eager_mapping_strategy.hpp"
-#include "mapping_strategies.hpp"
+#include "mapping_strategy.hpp"
 
 namespace caterpillar
 {
@@ -126,12 +126,13 @@ private:
 namespace mt = mockturtle;
 
 template<class LogicNetwork>
-class best_fit_mapping_strategy
+class best_fit_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
+  using base_t = mapping_strategy<LogicNetwork>;
+
   best_fit_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : _ntk( ntk ),
-        _ps( ps )
+      : mapping_strategy<LogicNetwork>( ntk, ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
 
@@ -139,8 +140,7 @@ public:
   }
 
   /*! \brief Iterate over mapping steps. */
-  template<class Fn>
-  inline bool foreach_step( Fn&& fn ) const
+  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
   {
     for ( auto const& [n, a] : _steps )
     {
@@ -154,7 +154,7 @@ private:
   void run()
   {
     /* outer LUT mapping pass is without computing the truth table */
-    mt::mapping_view mapped_ntk{_ntk};
+    mt::mapping_view mapped_ntk{this->_ntk};
     mt::lut_mapping_params lm_ps;
     lm_ps.cut_enumeration_ps.cut_size = cut_size;
     mt::lut_mapping( mapped_ntk, lm_ps );
@@ -173,7 +173,7 @@ private:
       mapped_ntk.foreach_cell_fanin( n, [&]( auto c ) {
         leaves.push_back( c );
       } );
-      mt::cut_view cut{_ntk, leaves, n};
+      mt::cut_view cut{this->_ntk, leaves, n};
       mt::mapping_view<decltype( cut ), true> mapped_cut{cut};
       mt::lut_mapping_params lm_ps;
       uint32_t best_cut_size = leaves.size();
@@ -196,7 +196,7 @@ private:
         std::vector<uint32_t> leave_indexes;
         for ( auto l : leaves )
         {
-          leave_indexes.push_back( _ntk.node_to_index( l ) );
+          leave_indexes.push_back( this->_ntk.node_to_index( l ) );
         }
         const auto func = mt::simulate<kitty::dynamic_truth_table>( cut, mt::default_simulator<kitty::dynamic_truth_table>( leaves.size() ) )[0];
         if ( std::holds_alternative<compute_action>( action ) )
@@ -225,7 +225,7 @@ private:
             return true;
           std::vector<uint32_t> cell_leaves;
           mapped_cut.foreach_cell_fanin( cell, [&]( auto fanin ) {
-            cell_leaves.push_back( _ntk.node_to_index( fanin ) );
+            cell_leaves.push_back( this->_ntk.node_to_index( fanin ) );
           } );
 
           if ( cell == po )
@@ -262,7 +262,7 @@ private:
 
     uint32_t next_ancilla = 0u, current_used_ancilla = 0u;
     std::stack<uint32_t> free_list;
-    mt::node_map<uint32_t, LogicNetwork> node_to_qubit( _ntk );
+    mt::node_map<uint32_t, LogicNetwork> node_to_qubit( this->_ntk );
     auto const request_ancilla = [&]() {
       if ( free_list.empty() )
       {
@@ -301,9 +301,6 @@ private:
   }
 
 private:
-  LogicNetwork const& _ntk;
-  mapping_strategy_params _ps;
-
   /* some parameters that need to be extracted */
   uint32_t cut_size = 16u;
   uint32_t cut_lower_bound = 4u;

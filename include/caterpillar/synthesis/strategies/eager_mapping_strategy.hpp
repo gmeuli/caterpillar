@@ -12,7 +12,7 @@
 #include <mockturtle/utils/node_map.hpp>
 #include <mockturtle/views/topo_view.hpp>
 
-#include "mapping_strategies.hpp"
+#include "mapping_strategy.hpp"
 
 namespace caterpillar
 {
@@ -28,17 +28,18 @@ namespace mt = mockturtle;
  * This strategy only finds compute and uncompute steps, but no inplace steps.
  */
 template<class LogicNetwork>
-class eager_mapping_strategy
+class eager_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
+  using base_t = mapping_strategy<LogicNetwork>;
+
   /*! \brief Default constructor.
    *
    * \param ntk Logic network
    * \param ps  Mapping strategy parameters
    */
   eager_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : _ntk( ntk ),
-        _ps( ps ),
+      : mapping_strategy<LogicNetwork>( ntk, ps ),
         _ref_counts( ntk, 0u )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
@@ -55,8 +56,7 @@ public:
   }
 
   /*! \brief Iterate over mapping steps. */
-  template<class Fn>
-  inline bool foreach_step( Fn&& fn ) const
+  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
   {
     for ( auto const& [n, a] : _steps )
     {
@@ -70,20 +70,20 @@ private:
   /* compute reference counters */
   void init_refs()
   {
-    _ntk.foreach_node( [&]( auto n ) {
-      _ref_counts[n] = _ntk.fanout_size( n );
+    this->_ntk.foreach_node( [&]( auto n ) {
+      _ref_counts[n] = this->_ntk.fanout_size( n );
     } );
-    _ntk.foreach_po( [&]( auto f ) {
-      _pos.insert( _ntk.get_node( f ) );
+    this->_ntk.foreach_po( [&]( auto f ) {
+      _pos.insert( this->_ntk.get_node( f ) );
     } );
   }
 
   void run()
   {
-    mt::topo_view<LogicNetwork> topo{_ntk};
+    mt::topo_view<LogicNetwork> topo{this->_ntk};
 
     topo.foreach_node( [&]( auto n ) {
-      if ( _ntk.is_constant( n ) || _ntk.is_pi( n ) )
+      if ( this->_ntk.is_constant( n ) || this->_ntk.is_pi( n ) )
         return true;
 
       _steps.emplace_back( n, compute_action{} );
@@ -98,12 +98,12 @@ private:
 
   void uncompute_eagerly( mt::node<LogicNetwork> n )
   {
-    if ( _ntk.is_constant( n ) || _ntk.is_pi( n ) )
+    if ( this->_ntk.is_constant( n ) || this->_ntk.is_pi( n ) )
       return;
 
-    _ntk.foreach_fanin( n, [&]( auto const& f ) {
-      const auto child = _ntk.get_node( f );
-      if ( _ntk.is_constant( child ) || _ntk.is_pi( child ) )
+    this->_ntk.foreach_fanin( n, [&]( auto const& f ) {
+      const auto child = this->_ntk.get_node( f );
+      if ( this->_ntk.is_constant( child ) || this->_ntk.is_pi( child ) )
         return;
 
       if ( --_ref_counts[f] == 0u )
@@ -115,9 +115,6 @@ private:
   }
 
 private:
-  LogicNetwork const& _ntk;
-  mapping_strategy_params _ps;
-
   mt::node_map<uint32_t, LogicNetwork> _ref_counts;
   std::unordered_set<mt::node<LogicNetwork>> _pos;
 

@@ -11,6 +11,7 @@
 #include <unordered_set>
 
 #include "action.hpp"
+#include "mapping_strategy.hpp"
 #include "../sat.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
@@ -34,33 +35,14 @@ overloaded( Ts... )->overloaded<Ts...>;
 
 namespace mt = mockturtle;
 
-struct mapping_strategy_params
-{
-  /*! \brief Show progress bar. */
-  bool progress{false};
-
-  /*! \brief Maximum number of pebbles to use, if supported by mapping strategy (0 means no limit). */
-  uint32_t pebble_limit{0u};
-
-  /*! \brief Conflict limit for the SAT solver (0 means no limit). */
-  uint32_t conflict_limit{0u};
-
-  /*! \brief Increment pebble numbers, if timeout. */
-  bool increment_on_timeout{false};
-
-  /*! \brief Decrement pebble numbers, if satisfiable. */
-  bool decrement_on_success{false};
-};
-
 template<class LogicNetwork>
-class pebbling_mapping_strategy
+class pebbling_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
-
 public:
-  /* returns the method foreach_step */
+  using base_t = mapping_strategy<LogicNetwork>;
+
   pebbling_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : _ntk( ntk ),
-        ps( ps )
+      : mapping_strategy<LogicNetwork>( ntk, ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
     static_assert( mt::has_is_pi_v<LogicNetwork>, "LogicNetwork does not implement the is_pi method" );
@@ -71,19 +53,18 @@ public:
     static_assert( mt::has_index_to_node_v<LogicNetwork>, "LogicNetwork does not implement the index_to_node method" );
   }
 
-  template<class Fn>
-  inline bool foreach_step( Fn&& fn ) const
+  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
   {
-    assert( !ps.decrement_on_success || !ps.increment_on_timeout );
+    assert( !this->_ps.decrement_on_success || !this->_ps.increment_on_timeout );
     std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>> store_steps;
-    auto limit = ps.pebble_limit;
+    auto limit = this->_ps.pebble_limit;
     int max_steps = 100;
     while ( true )
     {
-      pebble_solver<LogicNetwork> solver( _ntk, limit );
+      pebble_solver<LogicNetwork> solver( this->_ntk, limit );
       solver.initialize();
 
-      mockturtle::progress_bar bar( 100, "|{0}| current step = {1}", ps.progress );
+      mockturtle::progress_bar bar( 100, "|{0}| current step = {1}", this->_ps.progress );
       percy::synth_result result;
 
       do
@@ -96,23 +77,23 @@ public:
 
         bar( std::min<uint32_t>( solver.current_step(), 100 ), solver.current_step() );
         solver.add_step();
-        result = solver.solve( ps.conflict_limit );
+        result = solver.solve( this->_ps.conflict_limit );
       } while ( result == percy::failure );
 
       if ( result == percy::timeout )
       {
-        if ( ps.increment_on_timeout )
+        if ( this->_ps.increment_on_timeout )
         {
           limit++;
           continue;
         }
-        else if ( !ps.decrement_on_success )
+        else if ( !this->_ps.decrement_on_success )
           return false;
       }
       else if ( result == percy::success )
       {
         store_steps = solver.extract_result();
-        if ( ps.decrement_on_success )
+        if ( this->_ps.decrement_on_success )
         {
           limit--;
           continue;
@@ -130,17 +111,16 @@ public:
       return true;
     }
   }
-
-private:
-  LogicNetwork const& _ntk;
-  mapping_strategy_params ps;
 };
 
 template<class LogicNetwork>
-class bennett_mapping_strategy
+class bennett_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
+  using base_t = mapping_strategy<LogicNetwork>;
+
   bennett_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
+    : mapping_strategy<LogicNetwork>( ntk, ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
     static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
@@ -170,8 +150,7 @@ public:
     } );
   }
 
-  template<class Fn>
-  inline bool foreach_step( Fn&& fn ) const
+  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
   {
     for ( auto const& [n, a] : steps )
     {
@@ -186,10 +165,13 @@ private:
 };
 
 template<class LogicNetwork>
-class bennett_inplace_mapping_strategy
+class bennett_inplace_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
+  using base_t = mapping_strategy<LogicNetwork>;
+
   bennett_inplace_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
+    : mapping_strategy<LogicNetwork>( ntk, ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
     static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
@@ -273,8 +255,7 @@ public:
     } );
   }
 
-  template<class Fn>
-  inline bool foreach_step( Fn&& fn ) const
+  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
   {
     for ( auto const& [n, a] : steps )
     {

@@ -24,18 +24,20 @@ template<class LogicNetwork>
 class pebbling_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
-  static_assert( mt::has_is_pi_v<LogicNetwork>, "LogicNetwork does not implement the is_pi method" );
-  static_assert( mt::has_foreach_fanin_v<LogicNetwork>, "LogicNetwork does not implement the foreach_fanin method" );
-  static_assert( mt::has_foreach_gate_v<LogicNetwork>, "LogicNetwork does not implement the foreach_gate method" );
-  static_assert( mt::has_num_gates_v<LogicNetwork>, "LogicNetwork does not implement the num_gates method" );
-  static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
-  static_assert( mt::has_index_to_node_v<LogicNetwork>, "LogicNetwork does not implement the index_to_node method" );
+  pebbling_mapping_strategy( mapping_strategy_params const& ps = {} )
+    : ps( ps )
+  {
+    static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
+    static_assert( mt::has_is_pi_v<LogicNetwork>, "LogicNetwork does not implement the is_pi method" );
+    static_assert( mt::has_foreach_fanin_v<LogicNetwork>, "LogicNetwork does not implement the foreach_fanin method" );
+    static_assert( mt::has_foreach_gate_v<LogicNetwork>, "LogicNetwork does not implement the foreach_gate method" );
+    static_assert( mt::has_num_gates_v<LogicNetwork>, "LogicNetwork does not implement the num_gates method" );
+    static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
+    static_assert( mt::has_index_to_node_v<LogicNetwork>, "LogicNetwork does not implement the index_to_node method" );
+  }
 
   bool compute_steps( LogicNetwork const& ntk ) override
   {
-    mapping_strategy_params ps;
-
     assert( !ps.decrement_on_success || !ps.increment_on_timeout );
     std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>> store_steps;
     auto limit = ps.pebble_limit;
@@ -87,6 +89,9 @@ public:
       return true;
     }
   }
+
+private:
+  mapping_strategy_params ps;
 };
 
 }

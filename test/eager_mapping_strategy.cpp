@@ -62,8 +62,9 @@ TEST_CASE( "Eager mapping strategy for 3-bit sorting network", "[eager_mapping_s
   CHECK( uncompute == 3u );
 
   netlist<stg_gate> circ;
+  eager_mapping_strategy<aig_network> strategy2;
   logic_network_synthesis_stats st;
-  logic_network_synthesis<netlist<stg_gate>, aig_network, eager_mapping_strategy<aig_network>>(circ, sorter, {}, {}, &st);
+  logic_network_synthesis(circ, sorter, strategy2, {}, {}, &st);
 
   const auto sorter2 = circuit_to_logic_network<aig_network>(circ, st.i_indexes, st.o_indexes);
   CHECK( sorter2 );

@@ -35,12 +35,10 @@ TEST_CASE( "Pebble mapping strategy for 3-bit sorting network", "[pebbling_mappi
   sorter.create_po( w5 );
   sorter.create_po( w6 );
 
-  pebbling_mapping_strategy<aig_network> strategy;
-  CHECK( strategy.compute_steps( sorter ) );
-
   netlist<stg_gate> circ;
+  pebbling_mapping_strategy<aig_network> strategy;
   logic_network_synthesis_stats st;
-  logic_network_synthesis<netlist<stg_gate>, aig_network, pebbling_mapping_strategy<aig_network>>(circ, sorter, {}, {}, &st);
+  logic_network_synthesis(circ, sorter, strategy, {}, {}, &st);
 
   const auto sorter2 = circuit_to_logic_network<aig_network>(circ, st.i_indexes, st.o_indexes);
   CHECK( sorter2 );

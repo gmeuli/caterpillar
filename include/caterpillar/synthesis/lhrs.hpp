@@ -5,8 +5,8 @@
 | Author(s): Giulia Meuli
 *-----------------------------------------------------------------------------*/
 #pragma once
-#include "./strategies/mapping_strategies.hpp"
 #include "../stg_gate.hpp"
+#include "./strategies/mapping_strategies.hpp"
 
 #include <array>
 #include <cstdint>
@@ -54,7 +54,6 @@ struct logic_network_synthesis_stats
   /*! \brief input qubits. */
   std::vector<uint32_t> i_indexes;
 
-
   void report() const
   {
     std::cout << fmt::format( "[i] total time = {:>5.2f} secs\n", mockturtle::to_seconds( time_total ) );
@@ -64,15 +63,16 @@ struct logic_network_synthesis_stats
 namespace detail
 {
 
-template<class QuantumNetwork, class LogicNetwork, class MappingStrategy, class SingleTargetGateSynthesisFn>
+template<class QuantumNetwork, class LogicNetwork, class SingleTargetGateSynthesisFn>
 class logic_network_synthesis_impl
 {
 public:
   logic_network_synthesis_impl( QuantumNetwork& qnet, LogicNetwork const& ntk,
+                                mapping_strategy<LogicNetwork>& strategy,
                                 SingleTargetGateSynthesisFn const& stg_fn,
                                 logic_network_synthesis_params const& ps,
                                 logic_network_synthesis_stats& st )
-      : qnet( qnet ), ntk( ntk ), stg_fn( stg_fn ), ps( ps ), st( st ), node_to_qubit( ntk )
+      : qnet( qnet ), ntk( ntk ), strategy( strategy ), stg_fn( stg_fn ), ps( ps ), st( st ), node_to_qubit( ntk )
   {
   }
 
@@ -84,7 +84,6 @@ public:
     if ( ntk.get_node( ntk.get_constant( false ) ) != ntk.get_node( ntk.get_constant( true ) ) )
       prepare_constant( true );
 
-    MappingStrategy strategy;
     if ( const auto result = strategy.compute_steps( ntk ); !result )
     {
       return false;
@@ -97,10 +96,13 @@ public:
                 const auto t = node_to_qubit[node] = request_ancilla();
                 if ( ps.verbose )
                   std::cout << "[i] compute " << ntk.node_to_index( node ) << " in qubit " << t << "\n";
-                if ( action.cell_override ) {
+                if ( action.cell_override )
+                {
                   const auto [func, leaves] = *action.cell_override;
                   compute_node_as_cell( node, t, func, leaves );
-                } else {
+                }
+                else
+                {
                   compute_node( node, t );
                 }
               },
@@ -108,10 +110,13 @@ public:
                 const auto t = node_to_qubit[node];
                 if ( ps.verbose )
                   std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " from qubit " << t << "\n";
-                if ( action.cell_override ) {
+                if ( action.cell_override )
+                {
                   const auto [func, leaves] = *action.cell_override;
                   compute_node_as_cell( node, t, func, leaves );
-                } else {
+                }
+                else
+                {
                   compute_node( node, t );
                 }
                 release_ancilla( t );
@@ -362,7 +367,8 @@ private:
 
     /* get control qubits */
     SetQubits controls;
-    for ( auto l : leave_indexes ) {
+    for ( auto l : leave_indexes )
+    {
       controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.node_to_index( l )] ) );
     }
 
@@ -536,6 +542,7 @@ private:
 private:
   QuantumNetwork& qnet;
   LogicNetwork const& ntk;
+  mapping_strategy<LogicNetwork>& strategy;
   SingleTargetGateSynthesisFn const& stg_fn;
   logic_network_synthesis_params const& ps;
   logic_network_synthesis_stats& st;
@@ -556,9 +563,9 @@ private:
  * function.
  */
 template<class QuantumNetwork, class LogicNetwork,
-         class MappingStrategy = bennett_inplace_mapping_strategy<LogicNetwork>,
          class SingleTargetGateSynthesisFn = tweedledum::stg_from_pprm>
 bool logic_network_synthesis( QuantumNetwork& qnet, LogicNetwork const& ntk,
+                              mapping_strategy<LogicNetwork>& strategy,
                               SingleTargetGateSynthesisFn const& stg_fn = {},
                               logic_network_synthesis_params const& ps = {},
                               logic_network_synthesis_stats* pst = nullptr )
@@ -566,10 +573,11 @@ bool logic_network_synthesis( QuantumNetwork& qnet, LogicNetwork const& ntk,
   static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
 
   logic_network_synthesis_stats st;
-  detail::logic_network_synthesis_impl<QuantumNetwork, LogicNetwork, MappingStrategy, SingleTargetGateSynthesisFn> impl( qnet,
-                                                                                                                         ntk,
-                                                                                                                         stg_fn,
-                                                                                                                         ps, st );
+  detail::logic_network_synthesis_impl<QuantumNetwork, LogicNetwork, SingleTargetGateSynthesisFn> impl( qnet,
+                                                                                                        ntk,
+                                                                                                        strategy,
+                                                                                                        stg_fn,
+                                                                                                        ps, st );
   const auto result = impl.run();
   if ( ps.verbose )
   {

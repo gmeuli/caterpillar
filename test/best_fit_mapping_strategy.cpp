@@ -35,12 +35,10 @@ TEST_CASE( "Best-fit mapping strategy for 3-bit sorting network", "[best_fit_map
   sorter.create_po( w5 );
   sorter.create_po( w6 );
 
-  best_fit_mapping_strategy<aig_network> strategy;
-  CHECK( strategy.compute_steps( sorter ) );
-
   netlist<stg_gate> circ;
   logic_network_synthesis_stats st;
-  logic_network_synthesis<netlist<stg_gate>, aig_network, best_fit_mapping_strategy<aig_network>>(circ, sorter, {}, {}, &st);
+  best_fit_mapping_strategy<aig_network> strategy;
+  logic_network_synthesis(circ, sorter, strategy, {}, {}, &st);
 
   const auto sorter2 = circuit_to_logic_network<aig_network>(circ, st.i_indexes, st.o_indexes);
   CHECK( sorter2 );

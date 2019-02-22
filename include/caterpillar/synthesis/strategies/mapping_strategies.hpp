@@ -47,6 +47,8 @@ public:
     static_assert( mt::has_get_node_v<LogicNetwork>, "LogicNetwork does not implement the get_node method" );
   }
 
+  virtual ~bennett_mapping_strategy() = default;
+
   bool compute_steps( LogicNetwork const& ntk ) override
   {
     std::unordered_set<mt::node<LogicNetwork>> drivers;
@@ -90,6 +92,8 @@ public:
     static_assert( mt::has_fanout_size_v<LogicNetwork>, "LogicNetwork does not implement the fanout_size method" );
     static_assert( mt::has_foreach_fanin_v<LogicNetwork>, "LogicNetwork does not implement the foreach_fanin method" );
   }
+
+  virtual ~bennett_inplace_mapping_strategy() = default;
 
   bool compute_steps( LogicNetwork const& ntk ) override
   {

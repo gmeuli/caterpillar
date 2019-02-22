@@ -7,15 +7,30 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <unordered_set>
 
+#include "action.hpp"
 #include "../sat.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
 #include <mockturtle/views/topo_view.hpp>
 
+#include <fmt/format.h>
+
 namespace caterpillar
 {
+
+namespace detail
+{
+template<class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template<class... Ts>
+overloaded( Ts... )->overloaded<Ts...>;
+} // namespace detail
 
 namespace mt = mockturtle;
 
@@ -272,5 +287,28 @@ public:
 private:
   std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> steps;
 };
+
+template<class MappingStrategy>
+void print_mapping_strategy( MappingStrategy const& strategy, std::ostream& os = std::cout )
+{
+  strategy.foreach_step( [&]( auto node, auto action ) {
+    std::visit(
+        detail::overloaded{
+            []( auto ) {},
+            [&]( compute_action const& ) {
+              os << fmt::format( "compute({})\n", node );
+            },
+            [&]( uncompute_action const& ) {
+              os << fmt::format( "uncompute({})\n", node );
+            },
+            [&]( compute_inplace_action const& action ) {
+              os << fmt::format( "compute_inplace({} -> {})\n", node, action.target_index );
+            },
+            [&]( uncompute_inplace_action const& action ) {
+              os << fmt::format( "uncompute_inplace({} -> {})\n", node, action.target_index );
+            }},
+        action );
+  } );
+}
 
 } // namespace caterpillar

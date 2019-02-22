@@ -29,17 +29,6 @@ using SetQubits = std::vector<Qubit>;
 namespace caterpillar
 {
 
-namespace detail
-{
-template<class... Ts>
-struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template<class... Ts>
-overloaded( Ts... )->overloaded<Ts...>;
-} // namespace detail
-
 namespace mt = mockturtle;
 
 struct logic_network_synthesis_params
@@ -100,17 +89,27 @@ public:
       std::visit(
           overloaded{
               []( auto ) {},
-              [&]( compute_action const& ) {
+              [&]( compute_action const& action ) {
                 const auto t = node_to_qubit[node] = request_ancilla();
                 if ( ps.verbose )
                   std::cout << "[i] compute " << ntk.node_to_index( node ) << " in qubit " << t << "\n";
-                compute_node( node, t );
+                if ( action.cell_override ) {
+                  const auto [func, leaves] = *action.cell_override;
+                  compute_node_as_cell( node, t, func, leaves );
+                } else {
+                  compute_node( node, t );
+                }
               },
-              [&]( uncompute_action const& ) {
+              [&]( uncompute_action const& action ) {
                 const auto t = node_to_qubit[node];
                 if ( ps.verbose )
                   std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " from qubit " << t << "\n";
-                compute_node( node, t );
+                if ( action.cell_override ) {
+                  const auto [func, leaves] = *action.cell_override;
+                  compute_node_as_cell( node, t, func, leaves );
+                } else {
+                  compute_node( node, t );
+                }
                 release_ancilla( t );
               },
               [&]( compute_inplace_action const& action ) {
@@ -351,6 +350,17 @@ private:
         compute_lut( ntk.node_function( node ), controls, tweedledum::qubit_id( t ) );
       }
     }
+  }
+
+  void compute_node_as_cell( mt::node<LogicNetwork> const& node, uint32_t t, kitty::dynamic_truth_table const& func, std::vector<uint32_t> const& leave_indexes )
+  {
+    /* get control qubits */
+    SetQubits controls;
+    for ( auto l : leave_indexes ) {
+      controls.push_back( tweedledum::qubit_id( node_to_qubit[ntk.node_to_index( l )] ) );
+    }
+
+    compute_lut( func, controls, tweedledum::qubit_id( t ) );
   }
 
   void compute_node_inplace( mt::node<LogicNetwork> const& node, uint32_t t )

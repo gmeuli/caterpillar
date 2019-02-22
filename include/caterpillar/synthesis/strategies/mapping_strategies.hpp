@@ -14,7 +14,6 @@
 #include "mapping_strategy.hpp"
 #include "../sat.hpp"
 
-#include <mockturtle/utils/progress_bar.hpp>
 #include <mockturtle/views/topo_view.hpp>
 
 #include <fmt/format.h>
@@ -34,84 +33,6 @@ overloaded( Ts... )->overloaded<Ts...>;
 } // namespace detail
 
 namespace mt = mockturtle;
-
-template<class LogicNetwork>
-class pebbling_mapping_strategy : public mapping_strategy<LogicNetwork>
-{
-public:
-  using base_t = mapping_strategy<LogicNetwork>;
-
-  pebbling_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : mapping_strategy<LogicNetwork>( ntk, ps )
-  {
-    static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
-    static_assert( mt::has_is_pi_v<LogicNetwork>, "LogicNetwork does not implement the is_pi method" );
-    static_assert( mt::has_foreach_fanin_v<LogicNetwork>, "LogicNetwork does not implement the foreach_fanin method" );
-    static_assert( mt::has_foreach_gate_v<LogicNetwork>, "LogicNetwork does not implement the foreach_gate method" );
-    static_assert( mt::has_num_gates_v<LogicNetwork>, "LogicNetwork does not implement the num_gates method" );
-    static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
-    static_assert( mt::has_index_to_node_v<LogicNetwork>, "LogicNetwork does not implement the index_to_node method" );
-  }
-
-  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
-  {
-    assert( !this->_ps.decrement_on_success || !this->_ps.increment_on_timeout );
-    std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>> store_steps;
-    auto limit = this->_ps.pebble_limit;
-    int max_steps = 100;
-    while ( true )
-    {
-      pebble_solver<LogicNetwork> solver( this->_ntk, limit );
-      solver.initialize();
-
-      mockturtle::progress_bar bar( 100, "|{0}| current step = {1}", this->_ps.progress );
-      percy::synth_result result;
-
-      do
-      {
-        if ( solver.current_step() >= max_steps )
-        {
-          result = percy::timeout;
-          break;
-        }
-
-        bar( std::min<uint32_t>( solver.current_step(), 100 ), solver.current_step() );
-        solver.add_step();
-        result = solver.solve( this->_ps.conflict_limit );
-      } while ( result == percy::failure );
-
-      if ( result == percy::timeout )
-      {
-        if ( this->_ps.increment_on_timeout )
-        {
-          limit++;
-          continue;
-        }
-        else if ( !this->_ps.decrement_on_success )
-          return false;
-      }
-      else if ( result == percy::success )
-      {
-        store_steps = solver.extract_result();
-        if ( this->_ps.decrement_on_success )
-        {
-          limit--;
-          continue;
-        }
-      }
-
-      if ( store_steps.empty() )
-        return false;
-
-      for ( auto const& [n, a] : store_steps )
-      {
-        fn( n, a );
-      }
-
-      return true;
-    }
-  }
-};
 
 template<class LogicNetwork>
 class bennett_mapping_strategy : public mapping_strategy<LogicNetwork>

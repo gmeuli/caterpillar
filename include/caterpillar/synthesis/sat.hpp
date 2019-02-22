@@ -80,7 +80,7 @@ public:
     solver.set_nr_vars( _nr_gates + extra );
 
     /* set constraint that everything is unpebbled */
-    for ( int v = 0; v < _nr_gates; v++ )
+    for ( auto v = 0u; v < _nr_gates; v++ )
     {
       int lit = pabc::Abc_Var2Lit( v, 1 ); // zero is not negated
       solver.add_clause( &lit, &lit + 1 );
@@ -149,7 +149,7 @@ public:
             to_var_or[1] = pabc::Abc_Var2Lit( card_vars[j][k + 1], 0 );
             solver.add_clause( to_var_or, to_var_or + 2 );
           }
-          else if ( k == _pebbles - 1 )
+          else if ( k == static_cast<int>( _pebbles - 1 ) )
           {
             to_var_or[0] = pabc::Abc_Var2Lit( _nr_steps * ( _nr_gates + extra ) + j + k + 1, 1 );
             to_var_or[1] = pabc::Abc_Var2Lit( card_vars[j][k], 1 );
@@ -232,7 +232,7 @@ public:
           if ( redundant && redundant_until > 0 )
           {
             // Found redundant gate j at step i until redundant_until
-            for ( auto ii = i; ii < redundant_until; ++ii )
+            for ( int ii = i; ii < redundant_until; ++ii )
             {
               vals_step[ii][j] = 0;
             }
@@ -261,7 +261,7 @@ public:
           if ( redundant && redundant_until > 0 )
           {
             // Found redundant gate j at step i until redundant_until
-            for ( auto ii = i; ii < redundant_until; ++ii )
+            for ( int ii = i; ii < redundant_until; ++ii )
             {
               vals_step[ii][j] = 1;
             }
@@ -270,16 +270,16 @@ public:
       }
     }
 
-    for ( int s = 1; s <= _nr_steps; s++ )
+    for ( auto s = 1u; s <= _nr_steps; s++ )
     {
       auto it = steps.end();
 
-      for ( int n = 0; n < _nr_gates; n++ )
+      for ( auto n = 0u; n < _nr_gates; n++ )
       {
         if ( vals_step[s][n] != vals_step[s - 1][n] )
         {
           bool inplace = false;
-          uint32_t target;
+          uint32_t target{};
 
 #if 0
           kitty::dynamic_truth_table tt = _net.node_function( gate_to_index[n] );

@@ -117,61 +117,45 @@ template<class LogicNetwork>
 class bennett_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  using base_t = mapping_strategy<LogicNetwork>;
-
-  bennett_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-    : mapping_strategy<LogicNetwork>( ntk, ps )
+  bennett_mapping_strategy()
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
     static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
     static_assert( mt::has_is_constant_v<LogicNetwork>, "LogicNetwork does not implement the is_constant method" );
     static_assert( mt::has_is_pi_v<LogicNetwork>, "LogicNetwork does not implement the is_pi method" );
     static_assert( mt::has_get_node_v<LogicNetwork>, "LogicNetwork does not implement the get_node method" );
+  }
 
-    (void)ps;
-
+  bool compute_steps( LogicNetwork const& ntk ) override
+  {
     std::unordered_set<mt::node<LogicNetwork>> drivers;
     ntk.foreach_po( [&]( auto const& f ) { drivers.insert( ntk.get_node( f ) ); } );
 
-    auto it = steps.begin();
+    auto it = this->steps().begin();
     mt::topo_view view{ntk};
     view.foreach_node( [&]( auto n ) {
       if ( ntk.is_constant( n ) || ntk.is_pi( n ) )
         return true;
 
       /* compute step */
-      it = steps.insert( it, {n, compute_action{}} );
+      it = this->steps().insert( it, {n, compute_action{}} );
       ++it;
 
       if ( !drivers.count( n ) )
-        it = steps.insert( it, {n, uncompute_action{}} );
+        it = this->steps().insert( it, {n, uncompute_action{}} );
 
       return true;
     } );
-  }
-
-  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
-  {
-    for ( auto const& [n, a] : steps )
-    {
-      fn( n, a );
-    }
 
     return true;
   }
-
-private:
-  std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> steps;
 };
 
 template<class LogicNetwork>
 class bennett_inplace_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  using base_t = mapping_strategy<LogicNetwork>;
-
-  bennett_inplace_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-    : mapping_strategy<LogicNetwork>( ntk, ps )
+  bennett_inplace_mapping_strategy()
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
     static_assert( mt::has_foreach_po_v<LogicNetwork>, "LogicNetwork does not implement the foreach_po method" );
@@ -184,16 +168,17 @@ public:
     static_assert( mt::has_decr_value_v<LogicNetwork>, "LogicNetwork does not implement the decr_value method" );
     static_assert( mt::has_fanout_size_v<LogicNetwork>, "LogicNetwork does not implement the fanout_size method" );
     static_assert( mt::has_foreach_fanin_v<LogicNetwork>, "LogicNetwork does not implement the foreach_fanin method" );
+  }
 
-    (void)ps;
-
+  bool compute_steps( LogicNetwork const& ntk ) override
+  {
     std::unordered_set<mt::node<LogicNetwork>> drivers;
     ntk.foreach_po( [&]( auto const& f ) { drivers.insert( ntk.get_node( f ) ); } );
 
     ntk.clear_values();
     ntk.foreach_node( [&]( const auto& n ) { ntk.set_value( n, ntk.fanout_size( n ) ); } );
 
-    auto it = steps.begin();
+    auto it = this->steps().begin();
     //mt::topo_view view{ntk};
     ntk.foreach_node( [&]( auto n ) {
       if ( ntk.is_constant( n ) || ntk.is_pi( n ) )
@@ -218,11 +203,11 @@ public:
         {
           if ( ntk.is_xor( n ) )
           {
-            it = steps.insert( it, {n, compute_inplace_action{
+            it = this->steps().insert( it, {n, compute_inplace_action{
                                            static_cast<uint32_t>(
                                                target )}} );
             ++it;
-            it = steps.insert( it, {n, uncompute_inplace_action{
+            it = this->steps().insert( it, {n, uncompute_inplace_action{
                                            static_cast<uint32_t>(
                                                target )}} );
             return true;
@@ -232,11 +217,11 @@ public:
         {
           if ( ntk.is_xor3( n ) )
           {
-            it = steps.insert( it, {n, compute_inplace_action{
+            it = this->steps().insert( it, {n, compute_inplace_action{
                                            static_cast<uint32_t>(
                                                target )}} );
             ++it;
-            it = steps.insert( it, {n, uncompute_inplace_action{
+            it = this->steps().insert( it, {n, uncompute_inplace_action{
                                            static_cast<uint32_t>(
                                                target )}} );
             return true;
@@ -245,28 +230,17 @@ public:
       }
 
       /* compute step */
-      it = steps.insert( it, {n, compute_action{}} );
+      it = this->steps().insert( it, {n, compute_action{}} );
       ++it;
 
       if ( !drivers.count( n ) )
-        it = steps.insert( it, {n, uncompute_action{}} );
+        it = this->steps().insert( it, {n, uncompute_action{}} );
 
       return true;
     } );
-  }
-
-  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
-  {
-    for ( auto const& [n, a] : steps )
-    {
-      fn( n, a );
-    }
 
     return true;
   }
-
-private:
-  std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> steps;
 };
 
 template<class MappingStrategy>

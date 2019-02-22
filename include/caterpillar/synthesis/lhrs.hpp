@@ -84,8 +84,12 @@ public:
     if ( ntk.get_node( ntk.get_constant( false ) ) != ntk.get_node( ntk.get_constant( true ) ) )
       prepare_constant( true );
 
-    MappingStrategy strategy( ntk, ps.mapping_ps );
-    const auto result = strategy.foreach_step( [&]( auto node, auto action ) {
+    MappingStrategy strategy;
+    if ( const auto result = strategy.compute_steps( ntk ); !result )
+    {
+      return false;
+    }
+    strategy.foreach_step( [&]( auto node, auto action ) {
       std::visit(
           overloaded{
               []( auto ) {},
@@ -129,7 +133,7 @@ public:
 
     prepare_outputs();
 
-    return result;
+    return true;
   }
 
 private:
@@ -354,6 +358,8 @@ private:
 
   void compute_node_as_cell( mt::node<LogicNetwork> const& node, uint32_t t, kitty::dynamic_truth_table const& func, std::vector<uint32_t> const& leave_indexes )
   {
+    (void)node;
+
     /* get control qubits */
     SetQubits controls;
     for ( auto l : leave_indexes ) {

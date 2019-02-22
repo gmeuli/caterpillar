@@ -39,18 +39,26 @@ class mapping_strategy
 {
 public:
   using step_function_t = std::function<void(mockturtle::node<LogicNetwork> const&, mapping_strategy_action const&)>;
+  using step_vec_t = std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>>;
 
-  mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : _ntk( ntk ),
-        _ps( ps )
+  virtual bool compute_steps( LogicNetwork const& ntk ) = 0;
+
+  void foreach_step( step_function_t const& fn ) const
   {
+    for ( auto const& [n, a] : _steps )
+    {
+      fn( n, a );
+    }
   }
 
-  virtual bool foreach_step( step_function_t const& fn ) const = 0;
-
 protected:
-  LogicNetwork const& _ntk;
-  mapping_strategy_params _ps;
+  step_vec_t& steps()
+  {
+    return _steps;
+  }
+
+private:
+  step_vec_t _steps;
 };
 
 } // namespace caterpillar

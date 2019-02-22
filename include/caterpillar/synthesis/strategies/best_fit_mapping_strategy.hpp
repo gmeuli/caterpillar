@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <stack>
 #include <vector>
 
@@ -39,20 +40,24 @@ template<class Ntk>
 class cell_view : public Ntk
 {
 public:
-  cell_view( Ntk const& ntk ) : Ntk( ntk ), _cell_fanout( ntk, 0u ), _node_to_index( ntk, 0u )
+  cell_view( Ntk const& ntk )
+    : Ntk( ntk ),
+      _cell_fanout( std::make_shared<typename decltype( _cell_fanout )::element_type>( ntk, 0u ) ), 
+      _node_to_index( std::make_shared<typename decltype( _node_to_index )::element_type>( ntk, 0u ) ),
+      _index_to_node( std::make_shared<typename decltype( _index_to_node )::element_type>() )
   {
-    _node_to_index[ntk.get_constant( false )] = 0;
-    _index_to_node.reserve( Ntk::num_cells() + Ntk::num_pis() + 2 );
-    _index_to_node.push_back( ntk.get_node( ntk.get_constant( false ) ) );
+    (*_node_to_index)[ntk.get_constant( false )] = 0;
+    _index_to_node->reserve( Ntk::num_cells() + Ntk::num_pis() + 2 );
+    _index_to_node->push_back( ntk.get_node( ntk.get_constant( false ) ) );
     if ( ntk.get_node( ntk.get_constant( true ) ) != ntk.get_node( ntk.get_constant( false ) ) )
     {
-      _node_to_index[ntk.get_constant( true )] = 1;
-      _index_to_node.push_back( ntk.get_node( ntk.get_constant( true ) ) );
+      (*_node_to_index)[ntk.get_constant( true )] = 1;
+      _index_to_node->push_back( ntk.get_node( ntk.get_constant( true ) ) );
       _num_constants++;
     }
     Ntk::foreach_pi( [&]( auto n ) {
-      _node_to_index[n] = _index_to_node.size();
-      _index_to_node.push_back( n );
+      (*_node_to_index)[n] = _index_to_node->size();
+      _index_to_node->push_back( n );
     } );
     init_fanout();
   }
@@ -88,12 +93,12 @@ public:
 
   uint32_t node_to_index( node<Ntk> const& n ) const
   {
-    return _node_to_index[n];
+    return (*_node_to_index)[n];
   }
 
   node<Ntk> index_to_node( uint32_t index ) const
   {
-    return _index_to_node[index];
+    return (*_index_to_node)[index];
   }
 
 private:
@@ -103,22 +108,24 @@ private:
       if ( !Ntk::is_cell_root( n ) )
         return true;
 
-      _node_to_index[n] = _index_to_node.size();
-      _index_to_node.push_back( n );
+      (*_node_to_index)[n] = _index_to_node->size();
+      _index_to_node->push_back( n );
       Ntk::foreach_cell_fanin( n, [&]( auto n2 ) {
-        _cell_fanout[n2]++;
+        (*_cell_fanout)[n2]++;
       } );
+
+      return true;
     } );
     Ntk::foreach_po( [&]( auto const& f ) {
-      _cell_fanout[f]++;
+      (*_cell_fanout)[f]++;
     } );
   }
 
 private:
   uint32_t _num_constants{1u};
-  node_map<uint32_t, Ntk> _cell_fanout;
-  node_map<uint32_t, Ntk> _node_to_index;
-  std::vector<node<Ntk>> _index_to_node;
+  std::shared_ptr<node_map<uint32_t, Ntk>> _cell_fanout;
+  std::shared_ptr<node_map<uint32_t, Ntk>> _node_to_index;
+  std::shared_ptr<std::vector<node<Ntk>>> _index_to_node;
 };
 
 } // namespace detail
@@ -129,24 +136,15 @@ template<class LogicNetwork>
 class best_fit_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  using base_t = mapping_strategy<LogicNetwork>;
-
-  best_fit_mapping_strategy( LogicNetwork const& ntk, mapping_strategy_params const& ps = {} )
-      : mapping_strategy<LogicNetwork>( ntk, ps )
+  best_fit_mapping_strategy()
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
-
-    run();
   }
 
-  /*! \brief Iterate over mapping steps. */
-  virtual bool foreach_step( typename base_t::step_function_t const& fn ) const override
+  bool compute_steps( LogicNetwork const& ntk ) override
   {
-    for ( auto const& [n, a] : _steps )
-    {
-      fn( n, a );
-    }
-
+    _ntk = ntk;
+    run();
     return true;
   }
 
@@ -154,14 +152,15 @@ private:
   void run()
   {
     /* outer LUT mapping pass is without computing the truth table */
-    mt::mapping_view mapped_ntk{this->_ntk};
+    mt::mapping_view mapped_ntk{_ntk};
     mt::lut_mapping_params lm_ps;
     lm_ps.cut_enumeration_ps.cut_size = cut_size;
     mt::lut_mapping( mapped_ntk, lm_ps );
 
     detail::cell_view<decltype( mapped_ntk )> cell_ntk{mapped_ntk};
 
-    eager_mapping_strategy strategy( cell_ntk );
+    eager_mapping_strategy<decltype( cell_ntk )> strategy;
+    strategy.compute_steps( cell_ntk );
     const auto [total_ancilla, steps] = first_mapping_pass( strategy );
 
     /* map the cells */
@@ -173,7 +172,7 @@ private:
       mapped_ntk.foreach_cell_fanin( n, [&]( auto c ) {
         leaves.push_back( c );
       } );
-      mt::cut_view cut{this->_ntk, leaves, n};
+      mt::cut_view cut{_ntk, leaves, n};
       mt::mapping_view<decltype( cut ), true> mapped_cut{cut};
       mt::lut_mapping_params lm_ps;
       uint32_t best_cut_size = leaves.size();
@@ -196,16 +195,16 @@ private:
         std::vector<uint32_t> leave_indexes;
         for ( auto l : leaves )
         {
-          leave_indexes.push_back( this->_ntk.node_to_index( l ) );
+          leave_indexes.push_back( _ntk.node_to_index( l ) );
         }
         const auto func = mt::simulate<kitty::dynamic_truth_table>( cut, mt::default_simulator<kitty::dynamic_truth_table>( leaves.size() ) )[0];
         if ( std::holds_alternative<compute_action>( action ) )
         {
-          _steps.emplace_back( n, compute_action{std::make_pair( func, leave_indexes )} );
+          this->steps().emplace_back( n, compute_action{std::make_pair( func, leave_indexes )} );
         }
         else
         {
-          _steps.emplace_back( n, uncompute_action{std::make_pair( func, leave_indexes )} );
+          this->steps().emplace_back( n, uncompute_action{std::make_pair( func, leave_indexes )} );
         }
       }
       else
@@ -213,7 +212,7 @@ private:
         lm_ps.cut_enumeration_ps.cut_size = best_cut_size;
         mt::lut_mapping<decltype( mapped_cut ), true>( mapped_cut, lm_ps );
 
-        auto it = _steps.end();
+        auto it = this->steps().end();
         mt::node<LogicNetwork> po;
         bool is_computing = std::holds_alternative<compute_action>( action );
         cut.foreach_po( [&]( auto f ) {
@@ -225,27 +224,27 @@ private:
             return true;
           std::vector<uint32_t> cell_leaves;
           mapped_cut.foreach_cell_fanin( cell, [&]( auto fanin ) {
-            cell_leaves.push_back( this->_ntk.node_to_index( fanin ) );
+            cell_leaves.push_back( _ntk.node_to_index( fanin ) );
           } );
 
           if ( cell == po )
           {
             if ( is_computing )
             {
-              it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+              it = this->steps().emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             }
             else
             {
-              it = _steps.emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+              it = this->steps().emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             }
             
             ++it;
           }
           else
           {
-            it = _steps.emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = this->steps().emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             ++it;
-            it = _steps.emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = this->steps().emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
           }
 
           return true;
@@ -262,7 +261,7 @@ private:
 
     uint32_t next_ancilla = 0u, current_used_ancilla = 0u;
     std::stack<uint32_t> free_list;
-    mt::node_map<uint32_t, LogicNetwork> node_to_qubit( this->_ntk );
+    mt::node_map<uint32_t, LogicNetwork> node_to_qubit( _ntk );
     auto const request_ancilla = [&]() {
       if ( free_list.empty() )
       {
@@ -288,10 +287,10 @@ private:
                 free_list.push( node_to_qubit[node] );
                 first_pass_steps.emplace_back( node, action, current_used_ancilla-- );
               },
-              [&]( compute_inplace_action const& action ) {
+              [&]( compute_inplace_action const& ) {
                 assert( false );
               },
-              [&]( uncompute_inplace_action const& action ) {
+              [&]( uncompute_inplace_action const& ) {
                 assert( false );
               }},
           action );
@@ -305,7 +304,7 @@ private:
   uint32_t cut_size = 16u;
   uint32_t cut_lower_bound = 4u;
 
-  std::vector<std::pair<mt::node<LogicNetwork>, mapping_strategy_action>> _steps;
+  LogicNetwork _ntk;
 };
 
 } // namespace caterpillar

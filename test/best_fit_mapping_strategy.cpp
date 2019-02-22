@@ -35,8 +35,8 @@ TEST_CASE( "Best-fit mapping strategy for 3-bit sorting network", "[best_fit_map
   sorter.create_po( w5 );
   sorter.create_po( w6 );
 
-  best_fit_mapping_strategy strategy( sorter );
-  uint32_t compute{0u}, uncompute{0u};
+  best_fit_mapping_strategy<aig_network> strategy;
+  CHECK( strategy.compute_steps( sorter ) );
 
   netlist<stg_gate> circ;
   logic_network_synthesis_stats st;

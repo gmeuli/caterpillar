@@ -35,7 +35,8 @@ TEST_CASE( "Eager mapping strategy for 3-bit sorting network", "[eager_mapping_s
   sorter.create_po( w5 );
   sorter.create_po( w6 );
 
-  eager_mapping_strategy strategy( sorter );
+  eager_mapping_strategy<aig_network> strategy;
+  CHECK( strategy.compute_steps( sorter ) );
   uint32_t compute{0u}, uncompute{0u};
 
   strategy.foreach_step( [&]( auto, auto a ) {

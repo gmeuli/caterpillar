@@ -16,29 +16,11 @@
 namespace caterpillar
 {
 
-struct mapping_strategy_params
-{
-  /*! \brief Show progress bar. */
-  bool progress{false};
-
-  /*! \brief Maximum number of pebbles to use, if supported by mapping strategy (0 means no limit). */
-  uint32_t pebble_limit{0u};
-
-  /*! \brief Conflict limit for the SAT solver (0 means no limit). */
-  uint32_t conflict_limit{0u};
-
-  /*! \brief Increment pebble numbers, if timeout. */
-  bool increment_on_timeout{false};
-
-  /*! \brief Decrement pebble numbers, if satisfiable. */
-  bool decrement_on_success{false};
-};
-
 template<class LogicNetwork>
 class mapping_strategy
 {
 public:
-  using step_function_t = std::function<void(mockturtle::node<LogicNetwork> const&, mapping_strategy_action const&)>;
+  using step_function_t = std::function<void( mockturtle::node<LogicNetwork> const&, mapping_strategy_action const& )>;
   using step_vec_t = std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>>;
 
   virtual bool compute_steps( LogicNetwork const& ntk ) = 0;
@@ -60,5 +42,28 @@ protected:
 private:
   step_vec_t _steps;
 };
+
+template<class MappingStrategy>
+void print_mapping_strategy( MappingStrategy const& strategy, std::ostream& os = std::cout )
+{
+  strategy.foreach_step( [&]( auto node, auto action ) {
+    std::visit(
+        detail::overloaded{
+            []( auto ) {},
+            [&]( compute_action const& ) {
+              os << fmt::format( "compute({})\n", node );
+            },
+            [&]( uncompute_action const& ) {
+              os << fmt::format( "uncompute({})\n", node );
+            },
+            [&]( compute_inplace_action const& action ) {
+              os << fmt::format( "compute_inplace({} -> {})\n", node, action.target_index );
+            },
+            [&]( uncompute_inplace_action const& action ) {
+              os << fmt::format( "uncompute_inplace({} -> {})\n", node, action.target_index );
+            }},
+        action );
+  } );
+}
 
 } // namespace caterpillar

@@ -29,6 +29,15 @@
 namespace caterpillar
 {
 
+struct best_fit_mapping_strategy_params
+{
+  /* cut size for large cuts in pre mapping */
+  uint32_t cut_size = 16u;
+
+  /* minimum cut size for remapping */
+  uint32_t cut_lower_bound = 4u;
+};
+
 namespace detail
 {
 
@@ -136,7 +145,8 @@ template<class LogicNetwork>
 class best_fit_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  best_fit_mapping_strategy()
+  best_fit_mapping_strategy( best_fit_mapping_strategy_params const& ps = {} )
+    : ps( ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
   }
@@ -154,7 +164,7 @@ private:
     /* outer LUT mapping pass is without computing the truth table */
     mt::mapping_view mapped_ntk{_ntk};
     mt::lut_mapping_params lm_ps;
-    lm_ps.cut_enumeration_ps.cut_size = cut_size;
+    lm_ps.cut_enumeration_ps.cut_size = ps.cut_size;
     mt::lut_mapping( mapped_ntk, lm_ps );
 
     detail::cell_view<decltype( mapped_ntk )> cell_ntk{mapped_ntk};
@@ -176,7 +186,7 @@ private:
       mt::mapping_view<decltype( cut ), true> mapped_cut{cut};
       mt::lut_mapping_params lm_ps;
       uint32_t best_cut_size = leaves.size();
-      while ( best_cut_size > cut_lower_bound )
+      while ( best_cut_size > ps.cut_lower_bound )
       {
         lm_ps.cut_enumeration_ps.cut_size = best_cut_size - 1;
         mt::lut_mapping<decltype( mapped_cut ), true>( mapped_cut, lm_ps );
@@ -301,8 +311,7 @@ private:
 
 private:
   /* some parameters that need to be extracted */
-  uint32_t cut_size = 16u;
-  uint32_t cut_lower_bound = 4u;
+  best_fit_mapping_strategy_params ps;
 
   LogicNetwork _ntk;
 };

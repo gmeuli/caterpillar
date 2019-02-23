@@ -10,9 +10,7 @@
 #include <iostream>
 #include <unordered_set>
 
-#include "action.hpp"
 #include "mapping_strategy.hpp"
-#include "../sat.hpp"
 
 #include <mockturtle/views/topo_view.hpp>
 
@@ -20,17 +18,6 @@
 
 namespace caterpillar
 {
-
-namespace detail
-{
-template<class... Ts>
-struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template<class... Ts>
-overloaded( Ts... )->overloaded<Ts...>;
-} // namespace detail
 
 namespace mt = mockturtle;
 
@@ -129,12 +116,12 @@ public:
           if ( ntk.is_xor( n ) )
           {
             it = this->steps().insert( it, {n, compute_inplace_action{
-                                           static_cast<uint32_t>(
-                                               target )}} );
+                                                   static_cast<uint32_t>(
+                                                       target )}} );
             ++it;
             it = this->steps().insert( it, {n, uncompute_inplace_action{
-                                           static_cast<uint32_t>(
-                                               target )}} );
+                                                   static_cast<uint32_t>(
+                                                       target )}} );
             return true;
           }
         }
@@ -143,12 +130,12 @@ public:
           if ( ntk.is_xor3( n ) )
           {
             it = this->steps().insert( it, {n, compute_inplace_action{
-                                           static_cast<uint32_t>(
-                                               target )}} );
+                                                   static_cast<uint32_t>(
+                                                       target )}} );
             ++it;
             it = this->steps().insert( it, {n, uncompute_inplace_action{
-                                           static_cast<uint32_t>(
-                                               target )}} );
+                                                   static_cast<uint32_t>(
+                                                       target )}} );
             return true;
           }
         }
@@ -167,28 +154,5 @@ public:
     return true;
   }
 };
-
-template<class MappingStrategy>
-void print_mapping_strategy( MappingStrategy const& strategy, std::ostream& os = std::cout )
-{
-  strategy.foreach_step( [&]( auto node, auto action ) {
-    std::visit(
-        detail::overloaded{
-            []( auto ) {},
-            [&]( compute_action const& ) {
-              os << fmt::format( "compute({})\n", node );
-            },
-            [&]( uncompute_action const& ) {
-              os << fmt::format( "uncompute({})\n", node );
-            },
-            [&]( compute_inplace_action const& action ) {
-              os << fmt::format( "compute_inplace({} -> {})\n", node, action.target_index );
-            },
-            [&]( uncompute_inplace_action const& action ) {
-              os << fmt::format( "uncompute_inplace({} -> {})\n", node, action.target_index );
-            }},
-        action );
-  } );
-}
 
 } // namespace caterpillar

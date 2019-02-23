@@ -20,11 +20,29 @@ namespace caterpillar
 
 namespace mt = mockturtle;
 
+struct pebbling_mapping_strategy_params
+{
+  /*! \brief Show progress bar. */
+  bool progress{false};
+
+  /*! \brief Maximum number of pebbles to use, if supported by mapping strategy (0 means no limit). */
+  uint32_t pebble_limit{0u};
+
+  /*! \brief Conflict limit for the SAT solver (0 means no limit). */
+  uint32_t conflict_limit{0u};
+
+  /*! \brief Increment pebble numbers, if timeout. */
+  bool increment_on_timeout{false};
+
+  /*! \brief Decrement pebble numbers, if satisfiable. */
+  bool decrement_on_success{false};
+};
+
 template<class LogicNetwork>
 class pebbling_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
-  pebbling_mapping_strategy( mapping_strategy_params const& ps = {} )
+  pebbling_mapping_strategy( pebbling_mapping_strategy_params const& ps = {} )
     : ps( ps )
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );
@@ -91,7 +109,7 @@ public:
   }
 
 private:
-  mapping_strategy_params ps;
+  pebbling_mapping_strategy_params ps;
 };
 
 }

@@ -3,7 +3,9 @@
 | See accompanying file /LICENSE for details.
 | Author(s): Giulia Meuli
 *------------------------------------------------------------------------------------------------*/
-#include "../sat.hpp"
+
+#pragma once
+
 #include "mapping_strategy.hpp"
 #include <caterpillar/stg_gate.hpp>
 #include <mockturtle/networks/xag.hpp>

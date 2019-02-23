@@ -7,6 +7,7 @@
 
 
 #include <caterpillar/synthesis/lhrs.hpp>
+#include <caterpillar/synthesis/strategies/bennett_mapping_strategy.hpp>
 #include <caterpillar/stg_gate.hpp>
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
 

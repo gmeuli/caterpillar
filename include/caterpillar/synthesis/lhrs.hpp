@@ -6,7 +6,7 @@
 *-----------------------------------------------------------------------------*/
 #pragma once
 #include "../stg_gate.hpp"
-#include "./strategies/mapping_strategies.hpp"
+#include "strategies/mapping_strategy.hpp"
 
 #include <array>
 #include <cstdint>
@@ -16,9 +16,8 @@
 #include <mockturtle/utils/node_map.hpp>
 #include <mockturtle/utils/stopwatch.hpp>
 #include <mockturtle/views/topo_view.hpp>
-#include <stack>
-
 #include <tweedledum/algorithms/synthesis/stg.hpp>
+#include <stack>
 
 #include <variant>
 #include <vector>
@@ -33,9 +32,6 @@ namespace mt = mockturtle;
 
 struct logic_network_synthesis_params
 {
-  /*! \brief Parameters for the mapping strategy. */
-  mapping_strategy_params mapping_ps;
-
   /*! \brief Be verbose. */
   bool verbose{false};
 };

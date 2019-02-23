@@ -49,4 +49,15 @@ struct uncompute_inplace_action
 
 using mapping_strategy_action = std::variant<compute_action, uncompute_action, compute_inplace_action, uncompute_inplace_action>;
 
+namespace detail
+{
+template<class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template<class... Ts>
+overloaded( Ts... )->overloaded<Ts...>;
+} // namespace detail
+
 }

@@ -32,7 +32,8 @@ TEST_CASE("synthesize simple xag", "[XAG synthesis]")
   logic_network_synthesis_params ps;
   //ps.verbose = true;
 
-  logic_network_synthesis<netlist<stg_gate>, xag_network, xag_mapping_strategy>( qnet, xag, {}, ps );
+  xag_mapping_strategy strategy;
+  logic_network_synthesis( qnet, xag, strategy, {}, ps );
 
   std::vector<stg_gate> gates;
   qnet.foreach_cgate([&gates] (auto g){ gates.push_back(g.gate); });
@@ -71,7 +72,8 @@ TEST_CASE("synthesize simple xag 2", "[XAG synthesis-2]")
   logic_network_synthesis_stats st;
   //ps.verbose = true;
 
-  logic_network_synthesis<netlist<stg_gate>, xag_network, xag_mapping_strategy>( qnet, xag, {}, ps, &st );
+  xag_mapping_strategy strategy;
+  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
 
   auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
   const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );

@@ -7,6 +7,7 @@
 
 
 #include <caterpillar/synthesis/lhrs.hpp>
+#include <caterpillar/synthesis/strategies/bennett_mapping_strategy.hpp>
 #include <caterpillar/stg_gate.hpp>
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
 
@@ -29,8 +30,9 @@ TEST_CASE( "synthesize AND", "[lhrs AND test]" )
   /*auto o = */aig.create_po( c );
 
   netlist<stg_gate> revnet;
+  bennett_inplace_mapping_strategy<aig_network> strategy;
   logic_network_synthesis_stats st;
-  logic_network_synthesis( revnet, aig, stg_from_pprm(), {}, &st );
+  logic_network_synthesis( revnet, aig, strategy, stg_from_pprm(), {}, &st );
 
   CHECK( revnet.num_gates() == 1 );
   CHECK( revnet.num_qubits() == 3 );
@@ -68,8 +70,9 @@ TEST_CASE( "synthesize OR", "[lhrs OR test]" )
   /*auto o = */aig.create_po( c );
 
   netlist<stg_gate> revnet;
+  bennett_inplace_mapping_strategy<aig_network> strategy;
   logic_network_synthesis_stats st;
-  logic_network_synthesis( revnet, aig, stg_from_pprm(), {}, &st);
+  logic_network_synthesis( revnet, aig, strategy, stg_from_pprm(), {}, &st);
 
   CHECK( revnet.num_gates() == 2 );
   CHECK( revnet.num_qubits() == 3 );
@@ -118,7 +121,8 @@ TEST_CASE( "synthesize multioutput maj3", "[multiout MAJ]" )
   netlist<stg_gate> t_net;
 
   logic_network_synthesis_stats st;
-  logic_network_synthesis( t_net, mig, stg_from_pprm(), {}, &st );
+  bennett_inplace_mapping_strategy<mig_network> strategy;
+  logic_network_synthesis( t_net, mig, strategy, stg_from_pprm(), {}, &st );
 
   const auto ntk = circuit_to_logic_network<xag_network>( t_net, st.i_indexes, st.o_indexes );
 

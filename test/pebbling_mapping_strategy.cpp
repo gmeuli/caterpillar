@@ -4,7 +4,7 @@
 
 #include <caterpillar/stg_gate.hpp>
 #include <caterpillar/synthesis/lhrs.hpp>
-#include <caterpillar/synthesis/strategies/best_fit_mapping_strategy.hpp>
+#include <caterpillar/synthesis/strategies/pebbling_mapping_strategy.hpp>
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
 #include <kitty/static_truth_table.hpp>
 #include <mockturtle/algorithms/simulation.hpp>
@@ -12,7 +12,7 @@
 #include <tweedledum/io/write_unicode.hpp>
 #include <tweedledum/networks/netlist.hpp>
 
-TEST_CASE( "Best-fit mapping strategy for 3-bit sorting network", "[best_fit_mapping_strategy]" )
+TEST_CASE( "Pebble mapping strategy for 3-bit sorting network", "[pebbling_mapping_strategy]" )
 {
   using namespace caterpillar;
   using namespace caterpillar::detail;
@@ -36,8 +36,8 @@ TEST_CASE( "Best-fit mapping strategy for 3-bit sorting network", "[best_fit_map
   sorter.create_po( w6 );
 
   netlist<stg_gate> circ;
+  pebbling_mapping_strategy<aig_network> strategy;
   logic_network_synthesis_stats st;
-  best_fit_mapping_strategy<aig_network> strategy;
   logic_network_synthesis(circ, sorter, strategy, {}, {}, &st);
 
   const auto sorter2 = circuit_to_logic_network<aig_network>(circ, st.i_indexes, st.o_indexes);

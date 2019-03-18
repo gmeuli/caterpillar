@@ -60,14 +60,16 @@ public:
 	}
 
 	/*! \brief Extract parity term. */
-  	auto extract_term(uint32_t term)
-  	{
-    	auto it = term_to_angle_.find(term);
-    	if ( it == term_to_angle_.end() )
-      		return angle(0.0);
-    	return it->second;
-  	}
-	
+	auto extract_term(uint32_t term)
+	{
+		auto it = term_to_angle_.find(term);
+		if ( it == term_to_angle_.end() )
+			return angle(0.0);
+		const auto val = it->second;
+		term_to_angle_.erase(it);
+		return val;
+	}
+
 #pragma endregion
 
 private:

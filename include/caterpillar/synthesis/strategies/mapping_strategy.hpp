@@ -8,6 +8,8 @@
 
 #include <cstdint>
 #include <functional>
+#include <iostream>
+#include <fmt/format.h>
 
 #include <mockturtle/traits.hpp>
 

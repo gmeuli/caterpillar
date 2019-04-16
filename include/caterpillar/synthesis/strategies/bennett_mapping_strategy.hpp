@@ -117,11 +117,11 @@ public:
           {
             it = this->steps().insert( it, {n, compute_inplace_action{
                                                    static_cast<uint32_t>(
-                                                       target )}} );
+                                                       target ), std::nullopt}} );
             ++it;
             it = this->steps().insert( it, {n, uncompute_inplace_action{
                                                    static_cast<uint32_t>(
-                                                       target )}} );
+                                                       target ), std::nullopt}} );
             return true;
           }
         }
@@ -131,11 +131,11 @@ public:
           {
             it = this->steps().insert( it, {n, compute_inplace_action{
                                                    static_cast<uint32_t>(
-                                                       target )}} );
+                                                       target ), std::nullopt}} );
             ++it;
             it = this->steps().insert( it, {n, uncompute_inplace_action{
                                                    static_cast<uint32_t>(
-                                                       target )}} );
+                                                       target ), std::nullopt}} );
             return true;
           }
         }

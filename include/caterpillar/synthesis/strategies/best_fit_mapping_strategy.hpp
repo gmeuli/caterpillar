@@ -210,11 +210,11 @@ private:
         const auto func = mt::simulate<kitty::dynamic_truth_table>( cut, mt::default_simulator<kitty::dynamic_truth_table>( leaves.size() ) )[0];
         if ( std::holds_alternative<compute_action>( action ) )
         {
-          this->steps().emplace_back( n, compute_action{std::make_pair( func, leave_indexes )} );
+          this->steps().emplace_back( n, compute_action{ {} , std::make_pair( func, leave_indexes )} );
         }
         else
         {
-          this->steps().emplace_back( n, uncompute_action{std::make_pair( func, leave_indexes )} );
+          this->steps().emplace_back( n, uncompute_action{{}, std::make_pair( func, leave_indexes )} );
         }
       }
       else
@@ -241,20 +241,20 @@ private:
           {
             if ( is_computing )
             {
-              it = this->steps().emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+              it = this->steps().emplace( it, cell, compute_action{{}, std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             }
             else
             {
-              it = this->steps().emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+              it = this->steps().emplace( it, cell, uncompute_action{{}, std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             }
             
             ++it;
           }
           else
           {
-            it = this->steps().emplace( it, cell, compute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = this->steps().emplace( it, cell, compute_action{{},std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             ++it;
-            it = this->steps().emplace( it, cell, uncompute_action{std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = this->steps().emplace( it, cell, uncompute_action{{},std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
           }
 
           return true;

@@ -91,11 +91,26 @@ public:
               [&]( compute_action const& action ) {
                 const auto t = node_to_qubit[node] = request_ancilla();
                 if ( ps.verbose )
-                  std::cout << "[i] compute " << ntk.node_to_index( node ) << " in qubit " << t << "\n";
+                {
+                  std::cout << "[i] compute " << ntk.node_to_index( node ) << " in qubit " << t;
+                  if ( action.leaves )
+                  {
+                    std::cout << " with leaves: ";
+                    for(auto l : *action.leaves)
+                    {
+                      std::cout << l << " ";
+                    }
+                  }
+                  std::cout << "\n";
+                }
                 if ( action.cell_override )
                 {
                   const auto [func, leaves] = *action.cell_override;
                   compute_node_as_cell( node, t, func, leaves );
+                }
+                else if (action.leaves)
+                {
+                  compute_big_xor( t, *action.leaves );
                 }
                 else
                 {
@@ -105,11 +120,26 @@ public:
               [&]( uncompute_action const& action ) {
                 const auto t = node_to_qubit[node];
                 if ( ps.verbose )
-                  std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " from qubit " << t << "\n";
+                {  
+                  std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " from qubit " << t;
+                  if ( action.leaves )
+                  {
+                    std::cout << " with leaves: ";
+                    for(auto l : *action.leaves)
+                    {
+                      std::cout << l << " ";
+                    }
+                  }
+                  std::cout << "\n";
+                }
                 if ( action.cell_override )
                 {
                   const auto [func, leaves] = *action.cell_override;
                   compute_node_as_cell( node, t, func, leaves );
+                }
+                else if (action.leaves)
+                {
+                  compute_big_xor(  t, *action.leaves );
                 }
                 else
                 {
@@ -119,15 +149,50 @@ public:
               },
               [&]( compute_inplace_action const& action ) {
                 if ( ps.verbose )
-                  std::cout << "[i] compute " << ntk.node_to_index( node ) << " inplace onto " << action.target_index << " in qubit " << node_to_qubit[ntk.index_to_node( action.target_index )] << "\n";
+                {  
+                  std::cout << "[i] compute " << ntk.node_to_index( node ) << " inplace onto " << action.target_index << " in qubit " << node_to_qubit[ntk.index_to_node( action.target_index )];
+                  if ( action.leaves )
+                  {
+                    std::cout << " with leaves: ";
+                    for(auto l : *action.leaves)
+                    {
+                      std::cout << l << " ";
+                    }
+                  }
+                  std::cout << "\n";
+                }
                 const auto t = node_to_qubit[node] = node_to_qubit[ntk.index_to_node( action.target_index )];
-                compute_node_inplace( node, t );
+                if (action.leaves)
+                {
+                  compute_big_xor( t, *action.leaves );
+                }
+                else
+                {
+                  compute_node_inplace( node, t );
+                }
               },
               [&]( uncompute_inplace_action const& action ) {
                 if ( ps.verbose )
-                  std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " inplace onto " << action.target_index << " from qubit " << node_to_qubit[ntk.index_to_node( action.target_index )] << "\n";
+                {
+                  std::cout << "[i] uncompute " << ntk.node_to_index( node ) << " inplace onto " << action.target_index << " from qubit " << node_to_qubit[ntk.index_to_node( action.target_index )];
+                  if ( action.leaves )
+                  {
+                    std::cout << " with leaves: ";
+                    for(auto l : *action.leaves)
+                    {
+                      std::cout << l << " ";
+                    }
+                  }
+                }
                 const auto t = node_to_qubit[node];
-                compute_node_inplace( node, t );
+                if (action.leaves)
+                {
+                  compute_big_xor(  t, *action.leaves );
+                }
+                else 
+                {  
+                  compute_node_inplace( node, t );
+                }
               }},
           action );
     } );
@@ -232,6 +297,18 @@ private:
     return controls;
   }
 
+  void compute_big_xor( uint32_t t, std::vector<uint32_t> leaves)
+  {
+    for ( auto control : leaves )
+    {
+      if(node_to_qubit[control] != t)
+      {
+        qnet.add_gate( tweedledum::gate::cx, tweedledum::qubit_id( node_to_qubit[control] ), tweedledum::qubit_id( t ) );
+      }
+    }
+  }
+
+
   void compute_node( mt::node<LogicNetwork> const& node, uint32_t t )
   {
     if constexpr ( mt::has_is_and_v<LogicNetwork> )
@@ -266,6 +343,7 @@ private:
     {
       if ( ntk.is_xor( node ) )
       {
+        
         auto controls = get_fanin_as_literals<2>( node );
         compute_xor( node_to_qubit[ntk.index_to_node( controls[0] >> 1 )],
                      node_to_qubit[ntk.index_to_node( controls[1] >> 1 )],
@@ -494,18 +572,19 @@ private:
 
   void compute_xor_inplace( uint32_t c1, uint32_t c2, bool inv, uint32_t t )
   {
-    if ( c1 == t )
+    if ( c1 == t && c2 != t)
     {
       qnet.add_gate( tweedledum::gate::cx, tweedledum::qubit_id( c2 ), c1 );
     }
-    else if ( c2 == t )
+    else if ( c2 == t && c1 !=t)
     {
       qnet.add_gate( tweedledum::gate::cx, tweedledum::qubit_id( c1 ), c2 );
     }
-    else
+    else if (c1 != t && c2!= t && c1 != c2)
     {
       //std::cerr << "[e] target does not match any control in in-place\n";
       qnet.add_gate( tweedledum::gate::cx, tweedledum::qubit_id( c1 ), t );
+      qnet.add_gate( tweedledum::gate::cx, tweedledum::qubit_id( c2 ), t );
     }
     if ( inv )
       qnet.add_gate( tweedledum::gate::pauli_x, t );

@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Options
 option(CATERPILLAR_EXAMPLES "Build examples" ON)
 option(CATERPILLAR_TEST "Build tests" OFF)
+
 option(CATERPILLAR_Z3 "Use z3" OFF)
+
+set(Z3_INCLUDE_DIR "" CACHE STRING "If set, use this as Z3 include directory")
+set(Z3_LINK_DIR "" CACHE STRING "If set, use this as Z3 link directory")
 
 if(UNIX)
   # show quite some warnings (but remove some intentionally)

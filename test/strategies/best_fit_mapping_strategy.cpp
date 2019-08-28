@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/structures/stg_gate.hpp>
 #include <caterpillar/synthesis/lhrs.hpp>
 #include <caterpillar/synthesis/strategies/best_fit_mapping_strategy.hpp>
 #include <caterpillar/verification/circuit_to_logic_network.hpp>

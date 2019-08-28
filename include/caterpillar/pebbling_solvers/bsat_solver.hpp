@@ -16,7 +16,7 @@
 #include <percy/solvers/bsat2.hpp>
 #include <algorithm>
 
-#include "strategies/action.hpp"
+#include "../synthesis/strategies/action.hpp"
 
 namespace caterpillar
 {

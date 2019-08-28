@@ -12,7 +12,7 @@
 #include <mockturtle/io/write_verilog.hpp>
 #include <mockturtle/io/write_dot.hpp>
 
-#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/structures/stg_gate.hpp>
 #include <mockturtle/algorithms/simulation.hpp>
 #include <kitty/static_truth_table.hpp>
 
@@ -226,7 +226,6 @@ TEST_CASE("synthesize simple xag 6", "[XAG synthesis-6]")
   auto n29 = xag.create_xor(n25, n13);
   auto n37 = xag.create_xor(n10, n29);
   xag.create_po(n37);
-  //write_dot(xag, std::cout);
   netlist<stg_gate> qnet;
 
   logic_network_synthesis_params ps;
@@ -280,8 +279,6 @@ TEST_CASE("synthesize simple xag with reconvergence", "[XAG synthesis-7]")
   auto tt_ntk = simulate<kitty::static_truth_table<8>>( *ntk );
 
   CHECK(tt_xag == tt_ntk);
-
-  write_unicode( qnet );
 
 }
 

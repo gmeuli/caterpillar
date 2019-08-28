@@ -5,7 +5,7 @@
 | Author(s): Giulia Meuli
 *-----------------------------------------------------------------------------*/
 #pragma once
-#include "../stg_gate.hpp"
+#include "../structures/stg_gate.hpp"
 #include "strategies/mapping_strategy.hpp"
 
 #include <array>

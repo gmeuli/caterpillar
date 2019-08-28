@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <caterpillar/verification/circuit_to_logic_network.hpp>
-#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/structures/stg_gate.hpp>
 #include <kitty/dynamic_truth_table.hpp>
 #include <kitty/constructors.hpp>
 #include <kitty/static_truth_table.hpp>

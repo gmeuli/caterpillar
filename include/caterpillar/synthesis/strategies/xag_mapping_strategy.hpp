@@ -7,7 +7,7 @@
 #pragma once
 
 #include "mapping_strategy.hpp"
-#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/structures/stg_gate.hpp>
 #include <mockturtle/networks/xag.hpp>
 #include <mockturtle/views/topo_view.hpp>
 #include <tweedledum/networks/netlist.hpp>

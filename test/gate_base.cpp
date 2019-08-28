@@ -7,7 +7,7 @@
 
 #include <tweedledum/networks/netlist.hpp>
 
-#include <caterpillar/stg_gate.hpp>
+#include <caterpillar/structures/stg_gate.hpp>
 
 TEST_CASE( "create a netlist with one stg", "[stg netlist]" )
 {

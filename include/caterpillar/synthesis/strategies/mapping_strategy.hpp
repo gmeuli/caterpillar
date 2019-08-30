@@ -4,6 +4,11 @@
 | Author(s): Mathias Soeken and Giulia Meuli
 *-----------------------------------------------------------------------------*/
 
+/*!
+  \file mapping_strategy.hpp
+  \brief mapping strategies
+  \author Mathias Soeken and Giulia Meuli
+*/
 #pragma once
 
 #include <cstdint>
@@ -18,6 +23,7 @@
 namespace caterpillar
 {
 
+
 template<class LogicNetwork>
 class mapping_strategy
 {
@@ -25,8 +31,12 @@ public:
   using step_function_t = std::function<void( mockturtle::node<LogicNetwork> const&, mapping_strategy_action const& )>;
   using step_vec_t = std::vector<std::pair<mockturtle::node<LogicNetwork>, mapping_strategy_action>>;
 
+  /*! Takes the logic network as input and defines the strategy's steps sequence.
+   */
   virtual bool compute_steps( LogicNetwork const& ntk ) = 0;
 
+  /*! Iterates through the strategy's steps applying the given function.
+   */
   void foreach_step( step_function_t const& fn ) const
   {
     for ( auto const& [n, a] : _steps )

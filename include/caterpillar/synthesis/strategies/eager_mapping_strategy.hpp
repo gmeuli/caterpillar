@@ -99,13 +99,14 @@ private:
 
 }
 
-/*! \brief Eager mapping strategy.
- *
- * This strategy computes each node in topological order.  At each primary
- * output, all nodes in the transitive fanin are uncomputed that are not
- * required any longer in successive steps.
- *
- * This strategy only finds compute and uncompute steps, but no inplace steps.
+/*! 
+  \verbatim embed:rst
+    This strategy computes each node in topological order.  At each primary
+    output, all nodes in the transitive fanin are uncomputed that are not
+    required any longer in successive steps.
+  
+    This strategy only finds compute and uncompute steps, but no inplace steps.
+  \endverbatim
  */
 template<class LogicNetwork>
 class eager_mapping_strategy : public mapping_strategy<LogicNetwork>

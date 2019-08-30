@@ -38,6 +38,12 @@ struct pebbling_mapping_strategy_params
   bool decrement_on_success{false};
 };
 
+/*!
+  \verbatim embed:rst
+  The pebbling strategy is obtained by solving iteratively the reversible pebbling game on the given network.
+  The problem is encoded as a SAT problem. Details can be found in :cite:`MS19`.
+  \endverbatim
+*/
 template<class LogicNetwork>
 class pebbling_mapping_strategy : public mapping_strategy<LogicNetwork>
 {

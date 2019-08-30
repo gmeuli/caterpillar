@@ -4,6 +4,12 @@
 | Author(s): Mathias Soeken and Giulia Meuli
 *-----------------------------------------------------------------------------*/
 
+/*!
+  \file bennett_mapping_strategy.hpp
+  \brief defines the bennett strategy, both inplace and out-of-place
+  \author Mathias Soeken and Giulia Meuli
+*/
+
 #pragma once
 
 #include <cstdint>
@@ -21,10 +27,17 @@ namespace caterpillar
 
 namespace mt = mockturtle;
 
+/*!   
+  \verbatim embed:rst
+    A strategy that consists in computing all the nodes in topological order and uncomputing them in inverse topological order. 
+    It has been described in :cite:`B89` and it provides a solution that always returns the smallest number of reversible gates and the highest number of ancillae, with respect to the other methods. 
+  \endverbatim
+ */
 template<class LogicNetwork>
 class bennett_mapping_strategy : public mapping_strategy<LogicNetwork>
 {
 public:
+
   bennett_mapping_strategy()
   {
     static_assert( mt::is_network_type_v<LogicNetwork>, "LogicNetwork is not a network type" );

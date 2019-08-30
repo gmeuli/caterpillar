@@ -23,7 +23,7 @@ struct abstract_storage_data
   uint32_t num_pis = 0u;
   uint32_t num_pos = 0u;
 };
-/*! \brief k-LUT node
+/*! \brief abstract node
  *
  * `data[0].h1`: Fan-out size
  * `data[0].h2`: Application-specific value (weight)

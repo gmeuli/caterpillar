@@ -141,6 +141,16 @@ private:
 
 namespace mt = mockturtle;
 
+/*!
+  \verbatim embed:rst
+    This strategy applies a k-LUT mapping that decomposes the network into cells. 
+    Cells are initially placed to form a reversible network following an eager strategy.
+    The logic contained into each cell is decomposed by means of a second k-LUT mapping.
+    The method selects the minimum k such that there are enough clean ancillae to save intermediate results. 
+    A different "best-fit" k is selected for each cell.
+    Further details can be found in :cite:`MS18`.
+  \endverbatim
+*/
 template<class LogicNetwork>
 class best_fit_mapping_strategy : public mapping_strategy<LogicNetwork>
 {

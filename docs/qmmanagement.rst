@@ -10,7 +10,7 @@ The requirement that all intermediate results must be uncomputed makes finding a
 Consequently, effective memory management, which guarantees erasure of intermediate results, is crucial in quantum circuit synthesis.
 
 The problem of finding a strategy to compute and uncompute intermediate states for a given fixed number of qubits corresponds to solving the reversible pebbling game. 
-The reversible pebbling game is played on an input *Directed Acyclic Graph* (DAG), in which each node corresponds to one part of the decomposed computation, and edges define data dependency. 
+The reversible pebbling game is played on a *Directed Acyclic Graph* (DAG), in which each node corresponds to one part of the decomposed computation, and edges define data dependency. 
 The game consists of placing pebbles on the graph nodes. 
 When a node is *pebbled* the computed value is available on an ancillae qubit.  
 Initially no node is pebbled. A pebble can be placed on a node if all its children are pebbled, and the same condition is required to remove a pebble from a node. 
@@ -20,7 +20,7 @@ Solving the problem returns a valid clean-up strategy.
 .. image:: anim.gif
 
 The animated pictures shows one possible *eager* strategy to generate a reversible circuit (on the left) from an example DAG (on the right). 
-The depicted strategy first computes the first output, then uncomputes all the nodes that are no more needed, then computes the second output and finally uncomputes the last remaining node. 
+The depicted strategy first computes the first output, then uncomputes all the nodes that are no more needed in the output's cone, then computes the second output and finally uncomputes the last remaining node. 
 
 
 Please refer to the paper :cite:`MS19` for further details on this subject.

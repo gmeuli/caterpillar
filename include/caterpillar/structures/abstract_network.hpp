@@ -23,11 +23,14 @@ struct abstract_storage_data
   uint32_t num_pis = 0u;
   uint32_t num_pos = 0u;
 };
-/*! \brief abstract node
+/*! 
  *
  * `data[0].h1`: Fan-out size
+ * 
  * `data[0].h2`: Application-specific value (weight)
+ * 
  * `data[1].h1`: Function literal in truth table cache
+ * 
  * `data[2].h2`: Visited flags
  */
 struct abstract_storage_node : mockturtle::mixed_fanin_node<2>
@@ -40,11 +43,17 @@ struct abstract_storage_node : mockturtle::mixed_fanin_node<2>
 
 using abstract_storage = mockturtle::storage<abstract_storage_node, abstract_storage_data>;
 
+/*! 
+  General network in which each node is characterized by its input signals and an application-specific value.
+*/
 class abstract_network
 {
 public:
 #pragma region Types and constructors
+
   static constexpr auto min_fanin_size = 1;
+  /*! maximum fanin size
+  */
   static constexpr auto max_fanin_size = 32;
 
   using base_type = abstract_network;
@@ -73,11 +82,13 @@ private:
 
 #pragma region Primary I / O and constants
 public:
+  /*! returns a constant signal */
   signal get_constant( bool value = false ) const
   {
     return value ? 1 : 0;
   }
 
+  /*! adds a primary input and returns it */
   signal create_pi( std::string const& name = std::string() )
   {
     (void)name;
@@ -90,6 +101,7 @@ public:
     return index;
   }
 
+  /*! adds a primary output */
   void create_po( signal const& f, std::string const& name = std::string() )
   {
     (void)name;
@@ -105,6 +117,7 @@ public:
     return n <= 1;
   }
 
+  /*! verifies if a node is a primary input */
   bool is_pi( node const& n ) const
   {
     return n > 1 && _storage->nodes[n].children.empty();
@@ -117,11 +130,13 @@ public:
 #pragma endregion
 
 #pragma region Create unary functions
+
   signal create_buf( signal const& a )
   {
     return a;
   }
 
+  /*! creates a NOT node and returns its outcoming signal */
   signal create_not( signal const& a )
   {
     return create_node( {a}, 1 );
@@ -129,6 +144,7 @@ public:
 #pragma endregion
 
 #pragma region Create binary functions
+  /*! creates an AND node and returns its outcoming signal */
   signal create_and( signal a, signal b )
   {
     return create_node( {a, b}, 2 );
@@ -136,6 +152,7 @@ public:
 #pragma endregion
 
 #pragma region Create arbitrary functions
+  /*! creates an abstract node and returns its outcoming signal */
   signal create_node( std::vector<signal> const& children, uint32_t weight )
   {
     storage::element_type::node_type node;
@@ -158,31 +175,32 @@ public:
 #pragma endregion  
 
 #pragma region Structural properties
+  /*! returns the number of nodes in the network */
   auto size() const
   {
     return static_cast<uint32_t>( _storage->nodes.size() );
   }
-
+  /*! returns the number of primary inputs */
   auto num_pis() const
   {
     return static_cast<uint32_t>(_storage->inputs.size() );
   }
-
+  /*! returns the number of primary outputs */
   auto num_pos() const
   {
     return static_cast<uint32_t>(_storage->outputs.size() );
   }
-
+  /*! returns the number of actual gates (not considering primary inputs and constant nodes) */
   auto num_gates() const
   {
     return static_cast<uint32_t>(_storage->nodes.size() - _storage->inputs.size() - 2 );
   }
-
+  /*! returns the number of incoming signals of a node */
   uint32_t fanin_size( node const& n ) const
   {
     return static_cast<uint32_t>( _storage->nodes[n].children.size() );
   }
-
+  /*! returns the number of outcoming signals of a node */
   uint32_t fanout_size( node const& n ) const
   {
     return _storage->nodes[n].data[0].h1;
@@ -214,6 +232,8 @@ public:
 #pragma endregion
 
 #pragma region Node and signal iterators
+
+  /*! executes a function for every node of the nework */
   template<typename Fn>
   void foreach_node( Fn&& fn ) const
   {
@@ -221,20 +241,20 @@ public:
                              ez::make_direct_iterator<uint64_t>( _storage->nodes.size() ),
                              fn );
   }
-
+  /*! executes a function for every primary input of the nework */
   template<typename Fn>
   void foreach_pi( Fn&& fn ) const
   {
     mockturtle::detail::foreach_element( _storage->inputs.begin(), _storage->inputs.end(), fn );
   }
-
+  /*! executes a function for every primary output of the nework */
   template<typename Fn>
   void foreach_po( Fn&& fn ) const
   {
     using IteratorType = decltype( _storage->outputs.begin() );
     mockturtle::detail::foreach_element_transform<IteratorType, uint32_t>( _storage->outputs.begin(), _storage->outputs.end(), []( auto o ) { return o.index; }, fn );
   }
-
+  /*! executes a function for every gate of the nework */
   template<typename Fn>
   void foreach_gate( Fn&& fn ) const
   {
@@ -243,7 +263,7 @@ public:
                                 [this]( auto n ) { return !is_pi( n ); },
                                 fn );
   }
-
+  /*! executes a function for every incoming signal of a node */
   template<typename Fn>
   void foreach_fanin( node const& n, Fn&& fn ) const
   {
@@ -256,16 +276,17 @@ public:
 #pragma endregion
 
 #pragma region Custom node values
+  /*! clears the application specific value for every node */
   void clear_values() const
   {
     std::for_each( _storage->nodes.begin(), _storage->nodes.end(), []( auto& n ) { n.data[0].h2 = 0; } );
   }
-
+  /*! returns the application specific value of a node */
   uint32_t value( node const& n ) const
   {
     return _storage->nodes[n].data[0].h2;
   }
-
+  /*! sets the application specific value of a node */
   void set_value( node const& n, uint32_t v ) const
   {
     _storage->nodes[n].data[0].h2 = v;

@@ -18,6 +18,14 @@ namespace caterpillar
 
 namespace td = tweedledum;
 
+/*! 
+  A single-target gate is a reversible gate characterized by:
+  `_function` a control function,
+  `_controls` a list of control qubits,
+  `_targets` a list of target qubits.
+  
+  X gates are applied to the targets whenever the control function evaluates to true.
+*/
 class stg_gate : public td::gate_base
 {
 

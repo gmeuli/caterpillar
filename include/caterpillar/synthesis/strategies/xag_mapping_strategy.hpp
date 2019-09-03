@@ -33,8 +33,8 @@ struct action_sets
     This strategy is dedicated to XAG graphs and fault tolerant quantum computing.
     It exploits two main facts:
 
-    1.  XORs are relatively cheap to be implemented in fault tolerant quantum computing,
-    2.  Toffoli gates used to implement AND nodes can be uncomputed using 0 T gates.
+    1.  XORs are relatively cheap to be implemented in fault tolerant quantum computing
+    2.  Toffoli gates used to implement AND nodes can be uncomputed using 0 T gates
 
     Details can be found in :cite:`MSC19`.
   \endverbatim

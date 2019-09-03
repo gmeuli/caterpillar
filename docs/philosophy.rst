@@ -9,7 +9,7 @@ Both libraries are, together with Caterpillar, part of the `LSI Logic Synthesis 
 
 The core algorithm included in the library is a hierarchical method called **logic network synthesis**. 
 It takes a logic network as input and returns a reversible network, saving all the intermediate results on helper qubits (*ancillae*).
-This transpilation task requires all the intermediate results to be uncomputed. 
+This transpiling task requires all the intermediate results to be uncomputed. 
 
 Caterpillar supports several different uncomputing methods, called **strategies**. 
 In some cases the problem of finding a good strategy is encoded as a SAT problem and solved with state-of-the-art SAT solvers. 

@@ -21,6 +21,7 @@ Welcome to caterpillar's documentation!
    qmmanagement
    strategies
    references
+   structures
 
    
 

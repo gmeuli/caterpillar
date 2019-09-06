@@ -3,8 +3,8 @@ Mapping Strategies
 
 A mapping strategy provides a description of how the synthesizer should transpile a network. 
 
-All the mapping strategies have a method *foreach_step* that iterates over all the steps required to translate the network.
-A step is defined by a network node and by a mapping action: compute, uncompute, compute inplace or uncompute inplace.
+All the mapping strategies have a method `foreach_step` that iterates over all the steps required to translate the network.
+A step is defined by a network node and by a mapping action: `compute_action`, `uncompute_action`, `compute_inplace_action` and `uncompute_inplace_action`.
 
 All the strategies work on AIGs, XAGs, XMGs, MIGs and LUT networks, unless specifically noted otherwise.
 

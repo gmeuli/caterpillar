@@ -70,7 +70,7 @@ class xag_mapping_strategy : public mapping_strategy<mockturtle::xag_network>
 
   std::vector<action_sets> get_fi_target( mockturtle::node<mockturtle::xag_network> node )
   {
-    std::vector<action_sets> chs;
+    std::vector<action_sets> chs; 
 
     std::vector<mockturtle::node<mockturtle::xag_network>> fanins;
     xag.foreach_fanin( node, [&]( auto si ) {
@@ -83,7 +83,9 @@ class xag_mapping_strategy : public mapping_strategy<mockturtle::xag_network>
       fanins.push_back(fanin);
     } );
 
-    if(chs.size() == 2)
+    assert( chs.size() <= 2 ); //contains max two elements
+
+    if ( chs.size() == 2 )
     {
       if ( first_cone_included_in_second(fi[xag.node_to_index(chs[1].node)], fi[xag.node_to_index(chs[0].node)]) )
         std::reverse(chs.begin(), chs.end());
@@ -157,19 +159,14 @@ class xag_mapping_strategy : public mapping_strategy<mockturtle::xag_network>
       }
     }
     
-    if(xag.is_and(node))
-    {
-      if(compute)
-        comp_steps.push_back( {node, compute_action{}} );
-      else 
-      {
-        comp_steps.push_back( {node, uncompute_action{}} );
-      }
-    }
+ 
+    if(compute)
+      comp_steps.push_back( {node, compute_action{}} );
     else 
     {
-      comp_steps.push_back( {node, compute_action{}} );
+      comp_steps.push_back( {node, uncompute_action{}} );
     }
+  
 
     std::reverse( chs.begin(), chs.end() );
 

@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "mapping_strategy.hpp"
-#include "../../pebbling_solvers/bsat_solver.hpp"
+#include "../../solvers/bsat_solver.hpp"
 
 #include <mockturtle/utils/progress_bar.hpp>
 

@@ -1,7 +1,6 @@
 #include<catch.hpp>
 
 #include <caterpillar/structures/abstract_network.hpp>
-#include <caterpillar/pebbling_solvers/z3_solver.hpp>
 
 TEST_CASE("build a simple abstract graph", "[build simple abstract graph]")
 {

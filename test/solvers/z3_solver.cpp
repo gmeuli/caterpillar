@@ -1,7 +1,7 @@
 #include <catch.hpp>
 
 #include <caterpillar/structures/abstract_network.hpp>
-#include <caterpillar/pebbling_solvers/z3_solver.hpp>
+#include <caterpillar/solvers/z3_solver.hpp>
 
 #ifdef USE_Z3
 TEST_CASE(" pebble simple graph ", "[pebble simple graph]")

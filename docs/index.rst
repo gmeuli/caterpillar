@@ -20,8 +20,12 @@ Welcome to caterpillar's documentation!
    philosophy
    qmmanagement
    strategies
-   references
    structures
+
+.. toctree::
+   :maxdepth: 2
+
+   references
 
    
 

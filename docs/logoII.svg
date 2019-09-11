@@ -8,9 +8,9 @@
    xmlns="http://www.w3.org/2000/svg"
    style="fill-rule:evenodd;stroke-width:28.22200012;stroke-linejoin:round"
    version="1.2"
-   width="62.352825mm"
-   height="71.967712mm"
-   viewBox="8577 1570 6235.2825 7196.7716"
+   width="109.03977mm"
+   height="125.85384mm"
+   viewBox="8577 1570 10903.977 12585.385"
    preserveAspectRatio="xMidYMid"
    xml:space="preserve"
    id="svg4045"><metadata
@@ -83,11 +83,11 @@
      class="TextEmbeddedBitmaps"
      id="defs3946" /><g
      id="g207"
-     transform="matrix(2.1760317,0,0,2.1760317,-20227.937,-10619.123)"><g
+     transform="matrix(3.8053448,0,0,3.8053448,-41795.757,-19745.782)"><g
        transform="matrix(26.458333,0,0,26.458333,13237.37,5601.5376)"
        id="g4306"><polygon
          id="polygon4304"
-         points="108.3,93 54.2,125 0,93 0,31.2 54.2,0 108.3,31.2 "
+         points="0,93 0,31.2 54.2,0 108.3,31.2 108.3,93 54.2,125 "
          class="st0"
          style="fill:#f8f8f8" /></g><g
        style="fill:#00aa88"

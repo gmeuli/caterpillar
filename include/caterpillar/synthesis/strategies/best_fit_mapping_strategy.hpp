@@ -75,7 +75,7 @@ public:
   void foreach_node( Fn&& fn ) const
   {
     Ntk::foreach_node( [&]( auto n ) {
-      if ( Ntk::is_constant( n ) || Ntk::is_pi( n ) || Ntk::is_cell_root( n ) )
+      if ( this -> is_constant( n ) || this ->is_pi( n ) || this -> is_cell_root( n ) )
       {
         fn( n );
       }
@@ -86,7 +86,7 @@ public:
   void foreach_fanin( node<Ntk> const& n, Fn&& fn ) const
   {
     Ntk::foreach_cell_fanin( n, [&]( auto n2 ) {
-      fn( Ntk::make_signal( n2 ) );
+      fn( this -> make_signal( n2 ) );
     } );
   }
 

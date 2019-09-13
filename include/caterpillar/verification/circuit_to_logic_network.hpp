@@ -37,7 +37,7 @@ std::optional<LogicNetwork> circuit_to_logic_network( QuantumCircuit const& circ
 
   LogicNetwork ntk;
 
-  std::vector<signal<LogicNetwork>> qubit_to_signal( circ.num_qubits(), ntk.get_constant( false ) );
+  std::vector<mockturtle::signal<LogicNetwork>> qubit_to_signal( circ.num_qubits(), ntk.get_constant( false ) );
   for ( auto q : inputs )
   {
     qubit_to_signal[q] = ntk.create_pi();
@@ -52,7 +52,7 @@ std::optional<LogicNetwork> circuit_to_logic_network( QuantumCircuit const& circ
       return false;
     }
 
-    std::vector<signal<LogicNetwork>> controls;
+    std::vector<mockturtle::signal<LogicNetwork>> controls;
     n.gate.foreach_control([&](auto c) {
       controls.push_back(qubit_to_signal[c] ^ c.is_complemented());
     });

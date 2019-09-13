@@ -26,9 +26,9 @@ TEST_CASE("Convert simple reversible circuit to XAG", "[circuit_to_logic_network
   const auto d = circ.add_qubit();
   const auto e = circ.add_qubit();
 
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{a, b}}, {d} );
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{c, d}}, {e} );
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{a, b}}, {d} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({a, b}), {d} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({c, d}), {e} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({a, b}), {d} );
 
   const auto ntk = circuit_to_logic_network<xag_network>( circ, {a, b, c}, {e} );
 
@@ -61,9 +61,9 @@ TEST_CASE("Convert simple reversible circuit with negated controls to XAG", "[ci
   const auto d = circ.add_qubit();
   const auto e = circ.add_qubit();
 
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!a, !b}}, {d} );
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!c, d}}, {e} );
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{!a, !b}}, {d} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({!a, !b}), {d} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({!c, d}), {e} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({!a, !b}), {d} );
 
   const auto ntk = circuit_to_logic_network<xag_network>( circ, {a, b, c}, {e} );
 
@@ -94,7 +94,7 @@ TEST_CASE("Convert incrementer XAG", "[circuit_to_logic_network]")
   const auto b = circ.add_qubit();
   const auto c = circ.add_qubit();
 
-  circ.add_gate( gate::mcx, std::vector<qubit_id>{{a, b}}, {c} );
+  circ.add_gate( gate::mcx, std::vector<qubit_id>({a, b}), {c} );
   circ.add_gate( gate::cx, a, b );
   circ.add_gate( gate::pauli_x, a );
 

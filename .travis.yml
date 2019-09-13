@@ -3,7 +3,7 @@ language: cpp
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER ..
+  - cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCATERPILLAR_TEST=ON -DCATERPILLAR_EXAMPLES=ON ..
   - make 
 
 matrix:

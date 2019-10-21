@@ -82,6 +82,10 @@ public:
 
     if ( const auto result = strategy.compute_steps( ntk ); !result )
     {
+      if(ps.verbose)
+      {
+        std::cout << "[i] strategy could not be computed\n";
+      }
       return false;
     }
     strategy.foreach_step( [&]( auto node, auto action ) {

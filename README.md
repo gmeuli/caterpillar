@@ -10,25 +10,26 @@ caterpillar is a C++-17 quantum circuit synthesis library. It provides several L
 [Read the full documentation.](https://qcaterpillar.readthedocs.io/en/latest/?badge=latest)
 
 ## Example
-The following code reads an AIG from an Aiger file and synthesizes the corresponding reversible circuit using a logic network based synthesis method. 
+The following code reads an XAG network from a verilog file and uses logic network based synthesis to obtain the corresponding reversible circuit. In this example, we use the pebbling mapping strategy, that is a SAT-based method enabling constraints on the number of qubits. 
 
 ```c++
-/* read Aiger file using lorina */
-mockturtle::aig_network aig;
-auto const result = lorina::read_aiger( "adder.aig", mockturtle::aiger_reader( aig ) )
-if ( result != lorina::return_code::success )
-  return;
+  /* read verilog file using lorina */
+  mockturtle::xag_network xag;
 
-/* map to LUT network using mockturtle */
-using mapped_aig_t = mockturtle::mapping_view<mockturtle::aig_network, true>;
-mapped_aig_t mapped_aig{aig};
-mockturtle::lut_mapping<mapped_aig_t, true>(mapped_aig, ps);
-auto lutn = mockturtle::collapse_mapped_network<mockturtle::klut_network>( mapped_aig );
+  auto const result = lorina::read_verilog( "ex.v", mockturtle::verilog_reader( xag ) );
+  if ( result != lorina::return_code::success )
+    return 0;  
 
-/* compile to quantum circuit */
-tweedledum::gg_network<tweedledum::mcst_gate> rev_net;
-if ( lutn )
-  caterpillar::logic_network_synthesis( rev_net, *lutn, tweedledum::stg_from_pkrm() );
+  /* select the pebbling compilation strategy */
+  caterpillar::pebbling_mapping_strategy_params ps;
+  ps.pebble_limit = 100;
+
+  caterpillar::pebbling_mapping_strategy<mockturtle::xag_network> strategy( ps );
+
+  /* compile to quantum circuit */
+  tweedledum::netlist<caterpillar::stg_gate> circ;
+
+  caterpillar::logic_network_synthesis( circ, xag, strategy);
 ``` 
 
 ## Installation requirements

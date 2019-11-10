@@ -3,10 +3,26 @@
 | See accompanying file /LICENSE for details.
 | Author(s): Giulia Meuli
 *------------------------------------------------------------------------------------------------*/
+#include <tweedledum/tweedledum.hpp>
 #pragma once
 
 namespace caterpillar::detail
 {
+  template<class QuantumCircuit>
+  int t_cost( QuantumCircuit const& netlist)
+  {
+    int count = 0;
+    netlist.foreach_cgate([&](const auto gate)
+    {
+      if (gate.gate.is(tweedledum::gate_set::t))
+      {
+        count++;
+      }
+    });
+
+    return count;
+  }
+
   int t_cost( const int tof_controls, const int lines )
   {
     switch ( tof_controls )

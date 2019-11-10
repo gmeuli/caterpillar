@@ -75,6 +75,16 @@ public:
     return _targets.size();
   }
 
+  auto controls() const
+  {
+    return _controls;
+  }
+
+  auto targets() const
+  {
+    return _targets;
+  }
+
   template<typename Fn>
   void foreach_control( Fn&& fn ) const
   {

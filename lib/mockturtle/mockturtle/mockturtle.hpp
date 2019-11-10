@@ -45,6 +45,7 @@
 #include "algorithms/node_resynthesis.hpp"
 #include "algorithms/node_resynthesis/akers.hpp"
 #include "algorithms/node_resynthesis/mig_npn.hpp"
+#include "algorithms/node_resynthesis/xag_minmc.hpp"
 #include "algorithms/reconv_cut.hpp"
 #include "algorithms/refactoring.hpp"
 #include "algorithms/resubstitution.hpp"

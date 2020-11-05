@@ -1,12 +1,12 @@
-[![Build Status](https://travis-ci.com/gmeuli/caterpillar.svg?token=DiDrPCoZ4z6fZ8AyMtUC&branch=master)](https://travis-ci.com/gmeuli/caterpillar)
+![Linux CI](https://github.com/gmeuli/caterpillar/workflows/Linux%20CI/badge.svg)
+![MacOS CI](https://github.com/gmeuli/caterpillar/workflows/MacOS%20CI/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/qcaterpillar/badge/?version=latest)](https://qcaterpillar.readthedocs.io/en/latest/?badge=latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <img src="https://raw.githubusercontent.com/gmeuli/caterpillar/master/docs/logoII.svg?sanitize=true" width="64" height="64" align="left" style="margin-right: 12pt" />
 
 # caterpillar
-caterpillar is a C++-17 quantum circuit synthesis library. It provides several LUT-based methods for quantum compilation.
-
+Caterpillar is a C++-17 library dedicated to the synthesis of large quantum circuits implementing Boolean functions, with a focus on quantum memory management.
 [Read the full documentation.](https://qcaterpillar.readthedocs.io/en/latest/?badge=latest)
 
 ## Example
@@ -32,10 +32,6 @@ The following code reads an XAG network from a verilog file and uses logic netwo
   caterpillar::logic_network_synthesis( circ, xag, strategy);
 ``` 
 
-## Installation requirements
-
-A modern compiler is required to build *caterpillar*.  We are continously
-testing with Clang 6.0.1, GCC 7.3.0, and GCC 8.2.0.
 
 ## EPFL logic sythesis libraries
 

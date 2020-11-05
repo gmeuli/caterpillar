@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -75,7 +75,7 @@ uint32_t num_inverters( Ntk const& ntk )
     }
   } );
 
-  return inverted_nodes.size();
+  return static_cast<uint32_t>( inverted_nodes.size() );
 }
 
 /*! \brief Counts fanins which are primary inputs.

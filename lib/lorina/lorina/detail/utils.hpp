@@ -35,7 +35,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <functional>
-#include <functional>
 #include <locale>
 #include <memory>
 #include <numeric>
@@ -43,6 +42,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #ifndef _WIN32
 #include <libgen.h>
@@ -80,15 +80,18 @@ public:
 
   void declare_known( const std::string& known )
   {
-    _waits_for[ known ];
+    _known.emplace( known );
   }
-  
+
   void call_deferred( const std::vector<std::string>& inputs, const std::string& output, Args... params )
   {
     /* do we have all inputs */
     std::unordered_set<std::string> unknown;
     for ( const auto& input : inputs )
     {
+      if ( _known.find( input ) != _known.end() )
+        continue;
+
       auto it = _waits_for.find( input );
       if ( it == _waits_for.end() || !it->second.empty() )
       {
@@ -110,8 +113,14 @@ public:
       return;
     }
 
-    /* trigger computation */
-    _waits_for[output]; /* init empty, makes sure nothing is waiting for this output */
+    /* trigger dependency computation */
+    compute_dependencies( output );
+  }
+
+  void compute_dependencies( const std::string& output )
+  {
+     /* init empty, makes sure nothing is waiting for this output */
+    _waits_for[output];
     std::stack<std::string> computed;
     computed.push( output );
     while ( !computed.empty() )
@@ -149,8 +158,9 @@ public:
     }
     return deps;
   }
-  
+
 private:
+  std::unordered_set<std::string> _known;
   std::unordered_map<std::string, std::unordered_set<std::string>> _triggers;
   std::unordered_map<std::string, std::unordered_set<std::string>> _waits_for;
   std::function<void(Args...)> f;
@@ -163,11 +173,6 @@ inline std::string join( const T& t, const std::string& sep )
   return std::accumulate(
       std::next( t.begin() ), t.end(), std::string( t[0] ),
       [&]( const std::string& s, const typename T::value_type& v ) { return s + sep + std::string( v ); } );
-}
-
-inline bool file_exists( const std::string& filename )
-{
-  return std::ifstream( filename ).good();
 }
 
 /* string utils are from https://stackoverflow.com/a/217605 */
@@ -192,18 +197,6 @@ inline void trim( std::string& s )
 {
   ltrim( s );
   rtrim( s );
-}
-
-inline std::string ltrim_copy( std::string s )
-{
-  ltrim( s );
-  return s;
-}
-
-inline std::string rtrim_copy( std::string s )
-{
-  rtrim( s );
-  return s;
 }
 
 inline std::string trim_copy( std::string s )
@@ -238,98 +231,6 @@ inline void foreach_line_in_file_escape( std::istream& in, const std::function<b
   }
 }
 
-/* format with vector (see https://stackoverflow.com/questions/39493542/building-a-dynamic-list-of-named-arguments-for-fmtlib) */
-inline std::string format_with_vector( const std::string& fmtstr, const std::vector<std::string>& values )
-{
-  assert( values.size() <= 16u );
-
-  std::vector<fmt::internal::Value> data( values.size() );
-  fmt::ULongLong types = 0;
-
-  for ( auto i = 0u; i < values.size(); ++i )
-  {
-    types |= static_cast<uint64_t>( fmt::internal::Value::STRING ) << ( i * 4 );
-    data[i].string.value = values[i].data();
-    data[i].string.size = values[i].size();
-  }
-
-  return fmt::format( fmtstr, fmt::ArgList( types, &data[0] ) );
-}
-
-template<char sep>
-inline std::vector<std::string> split_with_quotes( const std::string& commands )
-{
-  std::vector<std::string> result;
-  std::string current;
-
-  enum _state
-  {
-    normal,
-    quote,
-    escape
-  };
-
-  _state s = normal;
-
-  for ( auto c : commands )
-  {
-    switch ( s )
-    {
-    case normal:
-      switch ( c )
-      {
-      case '"':
-        current += c;
-        s = quote;
-        break;
-
-      case sep:
-        trim( current );
-        result.push_back( current );
-        current.clear();
-        break;
-
-      default:
-        current += c;
-        break;
-      }
-      break;
-
-    case quote:
-      switch ( c )
-      {
-      case '"':
-        current += c;
-        s = normal;
-        break;
-
-      case '\\':
-        current += c;
-        s = escape;
-        break;
-
-      default:
-        current += c;
-        break;
-      };
-      break;
-
-    case escape:
-      current += c;
-      s = quote;
-      break;
-    }
-  }
-
-  trim( current );
-  if ( !current.empty() )
-  {
-    result.push_back( current );
-  }
-
-  return result;
-}
-
 // https://stackoverflow.com/a/14266139
 inline std::vector<std::string> split( const std::string& str, const std::string& sep )
 {
@@ -337,34 +238,24 @@ inline std::vector<std::string> split( const std::string& str, const std::string
 
   size_t last = 0;
   size_t next = 0;
+  std::string substring;
   while ( ( next = str.find( sep, last ) ) != std::string::npos )
   {
-    result.push_back( trim_copy( str.substr( last, next - last ) ) );
+    substring = str.substr( last, next - last );
+    if ( substring.length() > 0 )
+    {
+      std::string sub = str.substr( last, next - last );
+      sub.erase( std::remove( sub.begin(), sub.end(), ' ' ), sub.end() );
+      result.push_back( sub );
+    }
     last = next + 1;
   }
-  result.push_back( trim_copy( str.substr( last ) ) );
+
+  substring = str.substr( last );
+  substring.erase( std::remove( substring.begin(), substring.end(), ' ' ), substring.end() );
+  result.push_back( substring );
 
   return result;
-}
-
-// based on https://stackoverflow.com/questions/5612182/convert-string-with-explicit-escape-sequence-into-relative-character
-inline std::string unescape_quotes( const std::string& s )
-{
-  std::string res;
-  std::string::const_iterator it = s.begin();
-
-  while ( it != s.end() )
-  {
-    char c = *it++;
-    if ( c == '\\' && it != s.end() && *it == '"' )
-    {
-      c = '"';
-      ++it;
-    }
-    res += c;
-  }
-
-  return res;
 }
 
 #ifndef _WIN32
@@ -401,6 +292,11 @@ inline std::string basename( const std::string& filepath )
   return std::string( ::basename( const_cast<char*>( filepath.c_str() ) ) );
 }
 #endif
+
+inline bool starts_with( std::string const& s, std::string const& match )
+{
+  return ( s.substr( 0, match.size() ) == match );
+}
 
 } // namespace detail
 } // namespace lorina

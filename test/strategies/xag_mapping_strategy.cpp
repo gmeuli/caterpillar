@@ -1,359 +1,250 @@
 
 #include <catch.hpp>
+#include "../test_xag.hpp"
 
-#include <caterpillar/synthesis/lhrs.hpp>
-#include <caterpillar/synthesis/strategies/xag_mapping_strategy.hpp>
-#include <caterpillar/verification/circuit_to_logic_network.hpp>
-#include <mockturtle/networks/xag.hpp>
-#include <tweedledum/networks/netlist.hpp>
-#include <tweedledum/io/write_unicode.hpp>
-#include <tweedledum/io/write_projectq.hpp>
-
-#include <mockturtle/io/write_verilog.hpp>
-#include <mockturtle/io/write_dot.hpp>
-
-#include <caterpillar/structures/stg_gate.hpp>
-#include <mockturtle/algorithms/simulation.hpp>
-#include <kitty/static_truth_table.hpp>
-
+using namespace caterpillar;
+using namespace caterpillar::test;
 
 TEST_CASE("synthesize simple xag", "[XAG synthesis]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 1, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 1, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 1, false) );
 
-  auto a = xag.create_pi();
-  auto b = xag.create_pi();
-  auto c = xag.create_pi();
-  auto d = xag.create_and( a, b );
-  auto e = xag.create_xor( d, c );
-  xag.create_po( e );
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
-
-  CHECK(tt_xag == tt_ntk);
-  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 1, false) );
+  #endif
 }
-
 
 TEST_CASE("synthesize simple xag 2", "[XAG synthesis-2]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 2, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 2, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 2, false) );
 
-  auto a = xag.create_pi();
-  auto b = xag.create_pi();
-  auto c = xag.create_pi();
-  auto d = xag.create_pi();
-  auto e = xag.create_xor(a, b);
-  auto f = xag.create_xor(e, c);
-  auto g = xag.create_and(a, f);
-  auto h = xag.create_and(g, d);
-  auto i = xag.create_xor(h, d);
-  xag.create_po( i );
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
-  
-  CHECK(tt_xag == tt_ntk);
-  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 2, false) );
+  #endif
 }
+
 TEST_CASE("synthesize simple xag 3", "[XAG synthesis-3]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 3, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 3, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 3, false) );
 
-  auto a = xag.create_pi();
-  auto b = xag.create_pi();
-  auto c = xag.create_pi();
-  auto d = xag.create_pi();
-  auto e = xag.create_xor(a, b);
-  auto f = xag.create_xor(e, c);
-  auto g = xag.create_xor(a, f);
-  auto h = xag.create_and(g, d);
-  xag.create_po( h );
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
-
-  CHECK(tt_xag == tt_ntk);
-
-  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 3, false) );
+  #endif
 }
 
 TEST_CASE("synthesize simple xag 4", "[XAG synthesis-4]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 4, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 4, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 4, false) );
 
-  auto s = xag.create_pi();
-  auto t5 = xag.create_pi();
-  auto t2 = xag.create_pi();
-  auto t15 = xag.create_pi();
-  auto t12 = xag.create_pi();
-  auto t8 = xag.create_pi();
-  auto t7 = xag.create_pi();
-  auto t13 = xag.create_pi();
-
-  auto t6 = xag.create_xor(t5, t2);
-  auto t16 = xag.create_xor(t15, t12);
-  auto t18 = xag.create_xor(t6, t16);
-  auto t9 = xag.create_xor(t7, t8);
-  auto t14 = xag.create_xor(t13, t12);
-  auto t19 = xag.create_xor(t9, t14);
-  auto t22 = xag.create_xor(t18, t19);
-  auto s0 = xag.create_and(t22, s);
-
-
-  xag.create_po( s0 );
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
-
-  CHECK(tt_xag == tt_ntk);
-
-  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 4, false) );
+  #endif  
 }
 
 TEST_CASE("synthesize simple xag 5", "[XAG synthesis-5]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 5, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 5, false) );
 
-  auto x0 = xag.create_pi();
-  auto x3 = xag.create_pi();
-  auto x4 = xag.create_pi();
-  auto x5 = xag.create_pi();
-  auto x6 = xag.create_pi();
-  auto n10 = xag.create_xor(x6, x0);
-  auto n9 = xag.create_xor(x5, x3);
-  auto n16 = xag.create_xor(n10, n9);
-  auto n20 = xag.create_xor(n16, x4);
-  auto n21 = xag.create_xor(n20, x5);
-  auto n32 = xag.create_and(n16, n21);
-  xag.create_po(n32);
+  CHECK(xag_synthesis(xag_method::xag_lowd, 5, false) );
 
-  netlist<stg_gate> qnet;
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag )[0];
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk )[0];
-  CHECK(tt_xag == tt_ntk);
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 5, false) );
+  #endif
 
 }
 
 TEST_CASE("synthesize simple xag 6", "[XAG synthesis-6]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 6, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 6, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 6, false) );
 
-  auto x0 = xag.create_pi();
-  auto x1 = xag.create_pi();
-  auto x2 = xag.create_pi();
-  auto x3 = xag.create_pi();
-  auto x4 = xag.create_pi();
-  auto x5 = xag.create_pi();
-  auto x6 = xag.create_pi();
-
-  auto n10 = xag.create_xor(x6, x0);
-  auto n9 = xag.create_xor(x5, x3);
-  auto n16 = xag.create_xor(n10, n9);
-  auto n20 = xag.create_xor(n16, x4);
-  auto n22 = xag.create_xor(n20, x1);
-  auto n11 = xag.create_xor(x3, x0);
-  auto n25 = xag.create_xor(n22, n11);
-  auto n13 = xag.create_xor(x2, x1);
-  auto n29 = xag.create_xor(n25, n13);
-  auto n37 = xag.create_xor(n10, n29);
-  xag.create_po(n37);
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<8>>( xag );
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<8>>( *ntk );
-
-  CHECK(tt_xag == tt_ntk);
-
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 6, false) );
+  #endif
 }
 
-TEST_CASE("synthesize simple xag with reconvergence", "[XAG synthesis-7]")
+TEST_CASE("synthesize simple xag with codependent xor outputs", "[XAG synthesis-7]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 7, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 7, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 7, false) );
 
-  auto x2 = xag.create_pi();
-  auto x5 = xag.create_pi();
-  auto x6 = xag.create_pi();
-  auto x7 = xag.create_pi();
-  auto x4 = xag.create_pi();
-
-
-  auto n12 = xag.create_xor(x7, x5);
-  auto n13 = xag.create_xor(n12, x6);
-  auto n17 = xag.create_xor(n12, x2);
-  auto n19 = xag.create_xor(n17, n13);
-  auto n20 = xag.create_xor(x4, x6);
-  auto n22 = xag.create_and(n19, n20);
-  xag.create_po(n22);
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<8>>( xag );
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<8>>( *ntk );
-
-  CHECK(tt_xag == tt_ntk);
-
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 7, false) );
+  #endif
 }
 
-TEST_CASE("synthesize simple xag 8", "[XAG synthesis-8]")
+TEST_CASE("synthesize simple xag with reconvergence", "[XAG synthesis-8]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 8, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 8, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 8, false) );
 
-  auto x0 = xag.create_pi();
-  auto x5 = xag.create_pi();
-  auto x6 = xag.create_pi();
-  auto x7 = xag.create_pi();
-
-  auto n19 = xag.create_xor(x7, x0);
-  auto n20 = xag.create_and(n19, x6);
-  auto n21 = xag.create_and(n19, n20);
-  auto n26 = xag.create_xor(x5, x0);
-  auto n27 = xag.create_xor(n26, n20);
-  auto n29 = xag.create_and(x7, n27);
-  auto n32 = xag.create_and(n21, n29);
-
-  xag.create_po(n32);
-
-  netlist<stg_gate> qnet;
-
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
-
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
-
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag );
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk );
-
-  CHECK(tt_xag == tt_ntk);
-
-
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 8, false) );
+  #endif
 }
 
 TEST_CASE("synthesize simple xag 9", "[XAG synthesis-9]")
 {
-  using namespace caterpillar;
-  using namespace mockturtle;
-  using namespace tweedledum;
-  auto xag = xag_network();
+  CHECK(xag_synthesis(xag_method::xag_lowt, 9, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 9, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 9, false) );
 
-  auto x1 = xag.create_pi();
-  auto x2 = xag.create_pi();
-  auto x6 = xag.create_pi();
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 9, false) );
+  #endif
+}
 
-  auto n13 = xag.create_xor(x2, x1);
-  auto n14 = xag.create_xor(n13, x6);
-  auto n18 = xag.create_xor(n14, x6);
-  auto n38 = xag.create_and(n14, n18);
+TEST_CASE("synthesize simple xag 10", "[XAG synthesis-10]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 10, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 10, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 10, false) );
   
-  xag.create_po(n38);
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 10, false) );
+  #endif
+}
 
-  netlist<stg_gate> qnet;
+TEST_CASE("synthesize simple xag using pebbling", "[XAG synthesis-11]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 11, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 11, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 11, false) );
+  
+  #ifdef USE_Z3
+  pebbling_mapping_strategy_params peb_ps;
+  peb_ps.pebble_limit=2;
+  CHECK(xag_synthesis(xag_method::xag_pebb, 11, false) );
+  #endif
+}
 
-  logic_network_synthesis_params ps;
-  logic_network_synthesis_stats st;
-  ps.verbose = false;
+TEST_CASE("pebble simple xag 10", "[XAG synthesis-12]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 12, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 12, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 12, false) );
+  
+  #ifdef USE_Z3
+  pebbling_mapping_strategy_params peb_ps;
+  peb_ps.pebble_limit=4;
+  CHECK(xag_synthesis(xag_method::xag_pebb, 12, false) );
+  #endif
+}
 
-  xag_mapping_strategy strategy;
-  logic_network_synthesis( qnet, xag, strategy, {}, ps, &st );
+TEST_CASE("pebble simple xag 11", "[XAG synthesis-13]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 13, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 13, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 13, false) );
+  
+  #ifdef USE_Z3
+  pebbling_mapping_strategy_params peb_ps;
+  peb_ps.pebble_limit=28;
+  CHECK(xag_synthesis(xag_method::xag_pebb, 13, false, peb_ps) );
+  #endif
+}
 
-  auto tt_xag = simulate<kitty::static_truth_table<4>>( xag );
-  const auto ntk = circuit_to_logic_network<xag_network, netlist<stg_gate>>( qnet, st.i_indexes, st.o_indexes );
-  auto tt_ntk = simulate<kitty::static_truth_table<4>>( *ntk );
+TEST_CASE("pebbling XAG with weights", "[XAG synthesis-14]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 14, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 14, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 14, false) );
+  
+  #ifdef USE_Z3
+  pebbling_mapping_strategy_params peb_ps;
+  peb_ps.pebble_limit=4;
+  peb_ps.conflict_limit = 1000000;
+  peb_ps.optimize_weight = true;
+  peb_ps.verbose = false;
+  CHECK(xag_synthesis(xag_method::xag_pebb, 14, false, peb_ps) );
+  #endif
+}
 
-  CHECK(tt_xag == tt_ntk);
+TEST_CASE("min depth synthesis XAG", "[XAG synthesis-15]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 15, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 15, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 15, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 15, false) );
+  #endif
+}
+
+TEST_CASE("min depth synthesis XAG-2", "[XAG synthesis-16]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 16, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 16, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 16, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 16, false) );
+  #endif
+}
+
+TEST_CASE("min depth synthesis XAG no copies", "[XAG synthesis-17]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 17, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 17, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 17, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 17, false) );
+  #endif
+}
+
+TEST_CASE("min depth synthesis XAG-small", "[XAG synthesis-18]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 18, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 18, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 18, false) );
+ 
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 18, false) );
+  #endif
+}
+
+TEST_CASE("min depth synthesis XAG-small ", "[XAG synthesis-19]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 19, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 19, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 19, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 19, false) );
+  #endif
+}
 
 
+TEST_CASE("min depth synthesis parity buffer", "[XAG synthesis-20]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 20, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 20, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 20, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 20, false) );
+  #endif
+}
+TEST_CASE("min depth included cone", "[XAG synthesis-21]")
+{
+  CHECK(xag_synthesis(xag_method::xag_lowt, 21, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowt_fast, 21, false) );
+  CHECK(xag_synthesis(xag_method::xag_lowd, 21, false) );
+  
+  #ifdef USE_Z3
+  CHECK(xag_synthesis(xag_method::xag_pebb, 21, false) );
+  #endif
 }

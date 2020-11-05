@@ -192,7 +192,7 @@ private:
       mapped_ntk.foreach_cell_fanin( n, [&]( auto c ) {
         leaves.push_back( c );
       } );
-      mt::cut_view cut{_ntk, leaves, n};
+      mt::cut_view cut{_ntk, leaves, _ntk.make_signal(n)};
       mt::mapping_view<decltype( cut ), true> mapped_cut{cut};
       mt::lut_mapping_params lm_ps;
       uint32_t best_cut_size = leaves.size();
@@ -220,7 +220,7 @@ private:
         const auto func = mt::simulate<kitty::dynamic_truth_table>( cut, mt::default_simulator<kitty::dynamic_truth_table>( leaves.size() ) )[0];
         if ( std::holds_alternative<compute_action>( action ) )
         {
-          this->steps().emplace_back( n, compute_action{ {} , std::make_pair( func, leave_indexes )} );
+          this->steps().emplace_back( n, compute_action{ {} ,  std::make_pair( func, leave_indexes )} );
         }
         else
         {
@@ -262,7 +262,7 @@ private:
           }
           else
           {
-            it = this->steps().emplace( it, cell, compute_action{{},std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
+            it = this->steps().emplace( it, cell, compute_action{{}, std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
             ++it;
             it = this->steps().emplace( it, cell, uncompute_action{{},std::make_pair( mapped_cut.cell_function( cell ), cell_leaves )} );
           }

@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,7 +25,7 @@
 
 /*!
   \file xag_minmc.hpp
-  \brief XAG resynthesis 
+  \brief XAG resynthesis
 
   \author Eleonora Testa
 */
@@ -49,9 +49,8 @@
 #include <kitty/spectral.hpp>
 
 #include "../cleanup.hpp"
+#include "../simulation.hpp"
 #include "../../traits.hpp"
-#include "../../io/write_bench.hpp"
-#include "../../io/write_verilog.hpp"
 #include "../../networks/xag.hpp"
 #include "../../utils/stopwatch.hpp"
 #include "../../views/cut_view.hpp"
@@ -85,7 +84,7 @@ struct xag_minmc_resynthesis_stats
 
   /*! \brief Time to parse database. */
   stopwatch<>::duration time_parse_db{0};
-  
+
   /*! \brief Overall time to classify functions. */
   stopwatch<>::duration time_classify{0};
 
@@ -122,21 +121,21 @@ struct xag_minmc_resynthesis_stats
   }
 };
 
-/*! \brief Resynthesis function based on pre-computed size-optimum MIGs.
+/*! \brief Resynthesis function to minimize multiplicative complexity in XAGs.
  *
  * This resynthesis function can be passed to ``cut_rewriting`` with a cut size
- * of at most 6.  It will produce an XMG based on pre-computed XMGs with a
+ * of at most 6.  It will produce an XAG based on pre-computed XAGs with a
  * minimum multiplicative complexity.
  *
    \verbatim embed:rst
-  
+
    Example
-   
+
    .. code-block:: c++
-   
+
       const xag_network xag = ...;
       xag_minmc_resynthesis resyn;
-      cut_rewriting( xag, resyn );
+      xag = cut_rewriting( xag, resyn );
    \endverbatim
  */
 class xag_minmc_resynthesis
@@ -225,9 +224,9 @@ public:
   {
     stopwatch t1( st.time_total );
 
-    const auto func_ext = kitty::extend_to<6>( function );
+    const auto func_ext = kitty::extend_to<6u>( function );
     std::vector<kitty::detail::spectral_operation> trans;
-    kitty::static_truth_table<6> tt_ext;
+    kitty::static_truth_table<6u> tt_ext;
 
     const auto cache_it = classify_cache->find( func_ext );
 
@@ -269,7 +268,7 @@ public:
 
       std::tie( original_f, mc, circuit ) = search->second;
 
-      kitty::static_truth_table<6> db_repr;
+      kitty::static_truth_table<6u> db_repr;
       kitty::create_from_hex_string( db_repr, original_f );
 
       call_with_stopwatch( st.time_classify, [&]() { return kitty::exact_spectral_canonization(
@@ -337,16 +336,12 @@ public:
 
     if ( db->is_constant( db->get_node( circuit ) ) )
     {
-      output = xag.get_constant( false );
+      output = xag.get_constant( db->is_complemented( circuit ) );
     }
     else
     {
-      cut_view topo{*db, *db_pis, db->get_node( circuit )};
+      cut_view<xag_network> topo{*db, *db_pis, circuit};
       output = cleanup_dangling( topo, xag, pis.begin(), pis.end() ).front();
-    }
-    if ( db->is_complemented( circuit ) )
-    {
-      output = !output;
     }
 
     for ( auto const& g : final_xor )
@@ -373,7 +368,7 @@ private:
 
     while ( std::getline( file1, line ) )
     {
-      pos = line.find( '\t' );
+      pos = static_cast<unsigned>( line.find( '\t' ) );
       const auto name = line.substr( 0, pos++ );
       auto original = line.substr( pos, 16u );
       pos += 17u;
@@ -404,11 +399,11 @@ private:
           signals[j] = std::stoul( token );
           if ( signals[j] == 0 )
           {
-            ff[j] = db->get_constant( true );
+            ff[j] = db->get_constant( false );
           }
           else if ( signals[j] == 1 )
           {
-            ff[j] = db->get_constant( false );
+            ff[j] = db->get_constant( true );
           }
           else
           {
@@ -434,15 +429,11 @@ private:
       /* verify */
       if (ps.verify_database)
       {
-        cut_view view{*db, *db_pis, db->get_node( f )};
-        kitty::static_truth_table<6> tt, tt_repr;
+        cut_view<xag_network> view{*db, *db_pis, f};
+        kitty::static_truth_table<6u> tt, tt_repr;
         kitty::create_from_hex_string( tt, original );
         kitty::create_from_hex_string( tt_repr, token_f );
-        auto result = simulate<kitty::static_truth_table<6>>( view )[0];
-        if ( db->is_complemented( f ) )
-        {
-          result = ~result;
-        }
+        auto result = simulate<kitty::static_truth_table<6u>>( view )[0];
         if ( tt != result )
         {
           std::cerr << "[w] invalid circuit for " << original << ", got " << kitty::to_hex( result ) << "\n";
@@ -462,15 +453,17 @@ private:
     }
   }
 
-private:
+public:
   xag_minmc_resynthesis_params ps;
   xag_minmc_resynthesis_stats st;
+
+private:
   xag_minmc_resynthesis_stats *pst{nullptr};
 
   std::shared_ptr<xag_network> db;
   std::shared_ptr<std::vector<xag_network::signal>> db_pis;
   std::shared_ptr<std::unordered_map<std::string, std::tuple<std::string, unsigned, xag_network::signal>>> func_mc;
-  std::shared_ptr<std::unordered_map<kitty::static_truth_table<6>, std::tuple<bool, kitty::static_truth_table<6>, std::vector<kitty::detail::spectral_operation>>, kitty::hash<kitty::static_truth_table<6>>>> classify_cache;
+  std::shared_ptr<std::unordered_map<kitty::static_truth_table<6u>, std::tuple<bool, kitty::static_truth_table<6u>, std::vector<kitty::detail::spectral_operation>>, kitty::hash<kitty::static_truth_table<6u>>>> classify_cache;
 };
 
 } // namespace mockturtle

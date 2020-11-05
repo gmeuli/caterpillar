@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -38,7 +38,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <sparsepp/spp.h>
+#include "../utils/include/spp.hpp"
 
 namespace mockturtle
 {
@@ -176,6 +176,13 @@ struct node_hash
   }
 };
 
+struct latch_info
+{
+  std::string control = "";
+  uint64_t init = 3;
+  std::string type = "";
+};
+
 struct empty_storage_data
 {
 };
@@ -198,6 +205,7 @@ struct storage
   std::vector<node_type> nodes;
   std::vector<uint64_t> inputs;
   std::vector<typename node_type::pointer_type> outputs;
+  std::unordered_map<uint64_t, latch_info> latch_information;
 
   spp::sparse_hash_map<node_type, uint64_t, NodeHasher> hash;
 

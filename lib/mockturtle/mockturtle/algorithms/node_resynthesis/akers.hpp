@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -52,11 +52,11 @@ namespace mockturtle
  * ``cut_rewriting``, and ``refactoring``.
  *
    \verbatim embed:rst
-  
+
    Example
-   
+
    .. code-block:: c++
-   
+
       const klut_network klut = ...;
       akers_resynthesis<mig_network> resyn;
       const auto mig = node_resynthesis<mig_network>( klut, resyn );
@@ -67,7 +67,7 @@ class akers_resynthesis
 {
 public:
   template<typename LeavesIterator, typename Fn>
-  void operator()( Ntk& ntk, kitty::dynamic_truth_table const& function, LeavesIterator begin, LeavesIterator end, Fn&& fn )
+  void operator()( Ntk& ntk, kitty::dynamic_truth_table const& function, LeavesIterator begin, LeavesIterator end, Fn&& fn ) const
   {
     fn( akers_synthesis<Ntk>( ntk, function, ~function.construct(), begin, end ) );
   }

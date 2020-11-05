@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,7 +24,7 @@
  */
 
 /*!
-  \file cut_view.hpp
+  \file mffc_view.hpp
   \brief Implements an isolated view on a single cut in a network
 
   \author Mathias Soeken
@@ -37,10 +37,9 @@
 #include <vector>
 
 #include "../networks/detail/foreach.hpp"
+#include "../utils/include/spp.hpp"
 #include "../traits.hpp"
 #include "immutable_view.hpp"
-
-#include <sparsepp/spp.h>
 
 namespace mockturtle
 {
@@ -52,7 +51,7 @@ namespace mockturtle
  * which are already among the visited nodes.  Therefore the final view only
  * has outgoing edges to nodes not in the view from the given root node or from
  * the newly generated primary inputs.
- * 
+ *
  * The view reimplements the methods `size`, `num_pis`, `num_pos`, `foreach_pi`,
  * `foreach_po`, `foreach_node`, `foreach_gate`, `is_pi`, `node_to_index`, and
  * `index_to_node`.
@@ -189,7 +188,7 @@ private:
   {
     if ( Ntk::is_constant( n ) )
       return true;
-    
+
     if ( Ntk::is_pi( n ) )
     {
       _nodes.push_back( n );
@@ -273,7 +272,7 @@ private:
     /* is permanently marked? */
     if ( _colors[idx] == 2u )
       return;
-    
+
     /* mark node temporarily */
     _colors[idx] = 1u;
 

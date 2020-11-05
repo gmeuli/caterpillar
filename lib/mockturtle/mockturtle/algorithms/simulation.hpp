@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -135,7 +135,7 @@ private:
  * projection function according to the index.  The number of variables must be
  * known at compile time.
  */
-template<int NumVars>
+template<uint32_t NumVars>
 class default_simulator<kitty::static_truth_table<NumVars>>
 {
 public:

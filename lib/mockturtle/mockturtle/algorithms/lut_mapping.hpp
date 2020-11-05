@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -238,7 +238,7 @@ private:
     /* blend flow referenes */
     for ( auto i = 0u; i < ntk.size(); ++i )
     {
-      flow_refs[i] = coef * flow_refs[i] + ( 1.0f - coef ) * std::max<float>( 1.0f, map_refs[i] );
+      flow_refs[i] = coef * flow_refs[i] + ( 1.0f - coef ) * std::max( 1.0f, static_cast<float>( map_refs[i] ) );
     }
 
     ++iteration;
@@ -384,6 +384,9 @@ private:
       }
     }
 
+    if ( best_cut == -1 )
+      return;
+
     if constexpr ( ELA )
     {
       if ( map_refs[index] > 0 )
@@ -482,7 +485,7 @@ private:
  * - `uint32_t delay`
  * - `float flow`
  * - `float costs`
- * 
+ *
  * See `include/mockturtle/algorithms/cut_enumeration/mf_cut.hpp` for one
  * example of a CutData type that implements the cost function that is used in
  * the LUT mapper `&mf` in ABC.

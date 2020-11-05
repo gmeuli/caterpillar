@@ -182,7 +182,7 @@ void opt_stg_from_esop( Network& net, optimized_esop o_esop, std::vector<uint32_
 {
   /* foreach elem into pairing, put the first two cubes into a function that gets the eq
 	circuit and add the gate to the network */
-  uint index = 0;
+  uint32_t index = 0;
   for ( auto type : o_esop.pairing )
   {
     auto a = o_esop.cubes[index];
@@ -196,7 +196,7 @@ void opt_stg_from_esop( Network& net, optimized_esop o_esop, std::vector<uint32_
 
     index = index + 2;
   }
-  for ( uint i = index; i < o_esop.cubes.size(); i++ )
+  for ( uint32_t i = index; i < o_esop.cubes.size(); i++ )
   {
     from_cube_to_toffoli( net, o_esop.cubes[i], qubit_map );
   }

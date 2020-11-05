@@ -25,6 +25,7 @@ namespace percy
             int nr_in;
             int fanin;
             int op_tt_size; // The truth table size of operands in the chain (depends on fanin)
+            std::vector<dynamic_truth_table> compiled_functions;
             std::vector<std::vector<int>> steps;
             std::vector<dynamic_truth_table> operators;
             std::vector<int> outputs;
@@ -82,6 +83,11 @@ namespace percy
             is_output_inverted(int out_idx)
             {
                 return outputs[out_idx] & 1;
+            }
+
+            void set_compiled_functions( std::vector<dynamic_truth_table> const& fs )
+            {
+              compiled_functions = fs;
             }
 
             void
@@ -295,15 +301,16 @@ namespace percy
                 std::vector<dynamic_truth_table> tmps(steps.size());
                 std::vector<dynamic_truth_table> ins;
 
-                for (auto i = 0; i < nr_in; ++i) {
-                    ins.push_back(kitty::create<dynamic_truth_table>(nr_in));
+                for ( auto i = 0; i < nr_in; ++i ) {
+                    ins.push_back( kitty::create<dynamic_truth_table>( nr_in ) );
                 }
 
                 auto tt_step = kitty::create<dynamic_truth_table>(nr_in);
                 auto tt_compute = kitty::create<dynamic_truth_table>(nr_in);
 
                 // Some outputs may be simple constants or projections.
-                for (auto h = 0u; h < outputs.size(); h++) {
+                for (auto h = 0u; h < outputs.size(); h++)
+                {
                     const auto out = outputs[h];
                     const auto var = out >> 1;
                     const auto inv = out & 1;
@@ -317,42 +324,63 @@ namespace percy
                 }
 
                 for (auto i = 0u; i < steps.size(); i++) {
-                    const auto& step = steps[i];
+                  const auto& step = steps[i];
 
-                    for (int j = 0; j < fanin; j++) {
-                        const auto fanin = step[j];
-                        if (fanin < nr_in) {
-                            create_nth_var(ins[j], fanin);
-                        } else {
-                            ins[j] = tmps[fanin - nr_in];
-                        }
+                  for ( int j = 0; j < fanin; ++j )
+                  {
+                    const auto fanin = step[j];
+                    // std::cout << fanin << ' ';
+                    if ( fanin < nr_in )
+                    {
+                      create_nth_var(ins[j], fanin);
                     }
+                    else if ( fanin < nr_in + compiled_functions.size() )
+                    {
+                      ins[j] = compiled_functions.at( fanin - nr_in );
+                    }
+                    else
+                    {
+                      ins[j] = tmps[fanin - nr_in - compiled_functions.size()];
+                    }
+                    // kitty::print_binary( ins[j] );
+                    // std::cout << std::endl;
+                  }
 
-                    kitty::clear(tt_step);
-                    for (int j = 0; j < op_tt_size; j++) {
-                        kitty::clear(tt_compute);
-                        tt_compute = ~tt_compute;
-                        if (get_bit(operators[i], j)) {
-                            for (int k = 0; k < fanin; k++) {
-                                if ((j >> k) & 1) {
-                                    tt_compute &= ins[k];
-                                } else {
-                                    tt_compute &= ~ins[k];
-                                }
-                            }
-                            tt_step |= tt_compute;
+                  kitty::clear(tt_step);
+                  for ( int j = 0; j < op_tt_size; ++j )
+                  {
+                    kitty::clear(tt_compute);
+                    tt_compute = ~tt_compute;
+                    if ( get_bit( operators[i], j ) )
+                    {
+                      for ( int k = 0; k < fanin; ++k)
+                      {
+                        if ((j >> k) & 1)
+                        {
+                          tt_compute &= ins[k];
                         }
+                        else
+                        {
+                          tt_compute &= ~ins[k];
+                        }
+                      }
+                      tt_step |= tt_compute;
                     }
-                    tmps[i] = tt_step;
+                  }
+                  // std::cout << "step = ";
+                  // kitty::print_binary( tt_step );
+                  // std::cout << std::endl;
+                  tmps[i] = tt_step;
 
-                    for (auto h = 0u; h < outputs.size(); h++) {
-                        const auto out = outputs[h];
-                        const auto var = out >> 1;
-                        const auto inv = out & 1;
-                        if (var - nr_in - 1 == static_cast<int>(i)) {
-                            fs[h] = inv ? ~tt_step : tt_step;
-                        }
+                  for ( auto h = 0u; h < outputs.size(); ++h )
+                  {
+                    const auto out = outputs[h];
+                    const auto var = out >> 1;
+                    const auto inv = out & 1;
+                    if (var - nr_in - compiled_functions.size() - 1 == static_cast<int>(i)) {
+                      fs[h] = inv ? ~tt_step : tt_step;
                     }
+                  }
                 }
 
                 return fs;
@@ -410,31 +438,40 @@ namespace percy
                     }
                 }
 
-                if (spec.add_alonce_clauses) {
-                    // Ensure that each step is used at least once.
-                    std::vector<int> nr_uses(steps.size());
+                if ( spec.add_alonce_clauses )
+                {
+                  /* Ensure that each step is used at least once. */
+                  std::vector<int32_t> nr_uses( steps.size() );
 
-                    for (auto i = 1u; i < steps.size(); i++) {
-                        const auto& step = steps[i];
-                        for (const auto fid : step) {
-                            if (fid >= nr_in) {
-                                    nr_uses[fid-nr_in]++;
-                                }
-                        }
+                  for ( auto i = 0u; i < steps.size(); ++i )
+                  {
+                    auto const& step = steps[i];
+                    for ( const auto& fid : step )
+                    {
+                      if ( fid >= nr_in + compiled_functions.size() )
+                      {
+                        nr_uses[fid - nr_in - compiled_functions.size()]++;
+                      }
                     }
-                    for (auto output : outputs) {
-                        const auto step_idx = output >> 1;
-                        if (step_idx > nr_in) {
-                            nr_uses[step_idx-nr_in-1]++;
-                        }
-                    }
+                  }
 
-                    for (auto nr : nr_uses) {
-                        if (nr == 0) {
-                            assert(false);
-                            return false;
-                        }
+                  for ( auto const& output : outputs )
+                  {
+                    auto const step_idx = output >> 1;
+                    if ( step_idx > nr_in + compiled_functions.size() )
+                    {
+                      nr_uses[step_idx - nr_in - compiled_functions.size() - 1]++;
                     }
+                  }
+
+                  for ( auto const& nr : nr_uses )
+                  {
+                    if ( nr == 0 )
+                    {
+                      assert( false );
+                      return false;
+                    }
+                  }
                 }
 
                 if (spec.add_noreapply_clauses) {
@@ -585,6 +622,22 @@ namespace percy
                 const auto tt4 = in1 | in2;
                 for (const auto& op : operators) {
                     if (op != tt1 && op != tt2 && op != tt3 && op != tt4) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            bool is_mag()
+            {
+                if (fanin != 3) {
+                    return false;
+                }
+                kitty::dynamic_truth_table maj_tt(3);
+                kitty::create_majority(maj_tt);
+
+                for (const auto& op : operators) {
+                    if (op != maj_tt) {
                         return false;
                     }
                 }
@@ -758,6 +811,41 @@ namespace percy
                 to_expression(std::cout);
             }
 
+            void step_to_mag_expression(std::ostream& s, int step_idx)
+            {
+                assert(fanin == 3);
+
+                if (step_idx < nr_in) {
+                    s << char(('a' + step_idx));
+                    return;
+                }
+                const auto& step = get_step(step_idx - nr_in);
+                s << "<";
+                step_to_mag_expression(s, step[0]);
+                step_to_mag_expression(s, step[1]);
+                step_to_mag_expression(s, step[2]);
+                s << ">";
+            }
+
+            void to_mag_expression(std::ostream& s)
+            {
+                assert(outputs.size() == 1 && fanin == 3);
+                const auto outlit = outputs[0];
+                const auto outvar = outlit >> 1;
+                if (outvar == 0) { // Special case of constant 0
+                    s << "0";
+                } else {
+                    step_to_mag_expression(s, outvar-1);
+                }
+            }
+
+            void print_mag()
+            {
+                std::cout << steps.size() << "-step MAJ chain\n";
+                to_mag_expression(std::cout);
+                std::cout << "\n";
+            }
+
             template<int FI>
             void
             extract_dag(dag<FI>& g) const
@@ -769,3 +857,4 @@ namespace percy
 
 }
 
+#include "printer.hpp"

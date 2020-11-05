@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -49,6 +49,12 @@
 namespace mockturtle
 {
 
+/*! \brief Cut based on spectral properties.
+
+  This cut type uses the number of non-zero coefficients in the cut function as
+  cost function.  It requires truth table computation during cut enumeration
+  or LUT mapping in order to work.
+*/
 struct cut_enumeration_spectr_cut
 {
   uint32_t delay{0u};

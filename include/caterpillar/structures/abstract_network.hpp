@@ -153,7 +153,7 @@ public:
 
 #pragma region Create arbitrary functions
   /*! creates an abstract node and returns its outcoming signal */
-  signal create_node( std::vector<signal> const& children, uint32_t weight )
+  signal create_node( std::vector<signal> const& children, uint32_t weight = 1 )
   {
     storage::element_type::node_type node;
     std::copy( children.begin(), children.end(), std::back_inserter( node.children ) );
@@ -167,10 +167,11 @@ public:
       _storage->nodes[c].data[0].h1++;
     }
 
-    set_value( index, weight );
+    set_weight( index, weight );
 
     return index;
   }
+
 
 #pragma endregion  
 
@@ -277,17 +278,17 @@ public:
 
 #pragma region Custom node values
   /*! clears the application specific value for every node */
-  void clear_values() const
+  void clear_weights() const
   {
     std::for_each( _storage->nodes.begin(), _storage->nodes.end(), []( auto& n ) { n.data[0].h2 = 0; } );
   }
   /*! returns the application specific value of a node */
-  uint32_t value( node const& n ) const
+  uint32_t get_weight( node const& n ) const
   {
     return _storage->nodes[n].data[0].h2;
   }
   /*! sets the application specific value of a node */
-  void set_value( node const& n, uint32_t v ) const
+  void set_weight( node const& n, uint32_t v ) const
   {
     _storage->nodes[n].data[0].h2 = v;
   }

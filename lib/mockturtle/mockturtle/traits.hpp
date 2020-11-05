@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -34,6 +34,7 @@
 
 #include <string>
 #include <type_traits>
+#include <map>
 
 #include <kitty/dynamic_truth_table.hpp>
 #include <kitty/traits.hpp>
@@ -682,6 +683,21 @@ template<class Ntk>
 inline constexpr bool has_num_cos_v = has_num_cos<Ntk>::value;
 #pragma endregion
 
+#pragma region has_num_latches
+template<class Ntk, class = void>
+struct has_num_latches : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_num_latches<Ntk, std::void_t<decltype( std::declval<Ntk>().num_latches() )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_num_latches_v = has_num_latches<Ntk>::value;
+#pragma endregion
+
 #pragma region has_num_pis
 template<class Ntk, class = void>
 struct has_num_pis : std::false_type
@@ -892,6 +908,21 @@ template<class Ntk>
 inline constexpr bool has_update_fanout_v = has_update_fanout<Ntk>::value;
 #pragma endregion
 
+#pragma region has_is_on_critical_path
+template<class Ntk, class = void>
+struct has_is_on_critical_path : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_is_on_critical_path<Ntk, std::void_t<decltype( std::declval<Ntk>().is_on_critical_path( std::declval<node<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_is_on_critical_path_v = has_is_on_critical_path<Ntk>::value;
+#pragma endregion
+
 #pragma region has_is_and
 template<class Ntk, class = void>
 struct has_is_and : std::false_type
@@ -980,6 +1011,66 @@ struct has_is_xor3<Ntk, std::void_t<decltype( std::declval<Ntk>().is_xor3( std::
 
 template<class Ntk>
 inline constexpr bool has_is_xor3_v = has_is_xor3<Ntk>::value;
+#pragma endregion
+
+#pragma region has_is_nary_and
+template<class Ntk, class = void>
+struct has_is_nary_and : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_is_nary_and<Ntk, std::void_t<decltype( std::declval<Ntk>().is_nary_and( std::declval<node<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_is_nary_and_v = has_is_nary_and<Ntk>::value;
+#pragma endregion
+
+#pragma region has_is_nary_or
+template<class Ntk, class = void>
+struct has_is_nary_or : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_is_nary_or<Ntk, std::void_t<decltype( std::declval<Ntk>().is_nary_or( std::declval<node<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_is_nary_or_v = has_is_nary_or<Ntk>::value;
+#pragma endregion
+
+#pragma region has_is_nary_xor
+template<class Ntk, class = void>
+struct has_is_nary_xor : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_is_nary_xor<Ntk, std::void_t<decltype( std::declval<Ntk>().is_nary_xor( std::declval<node<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_is_nary_xor_v = has_is_nary_xor<Ntk>::value;
+#pragma endregion
+
+#pragma region has_is_function
+template<class Ntk, class = void>
+struct has_is_function : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_is_function<Ntk, std::void_t<decltype( std::declval<Ntk>().is_function( std::declval<node<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_is_function_v = has_is_function<Ntk>::value;
 #pragma endregion
 
 #pragma region has_node_function
@@ -1745,6 +1836,96 @@ struct has_incr_trav_id<Ntk, std::void_t<decltype( std::declval<Ntk>().incr_trav
 
 template<class Ntk>
 inline constexpr bool has_incr_trav_id_v = has_incr_trav_id<Ntk>::value;
+#pragma endregion
+
+#pragma region has_get_name
+template<class Ntk, class = void>
+struct has_get_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_get_name<Ntk, std::void_t<decltype( std::declval<Ntk>().get_name( std::declval<signal<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_get_name_v = has_get_name<Ntk>::value;
+#pragma endregion
+
+#pragma region has_set_name
+template<class Ntk, class = void>
+struct has_set_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_set_name<Ntk, std::void_t<decltype( std::declval<Ntk>().set_name( std::declval<signal<Ntk>>(), std::string() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_set_name_v = has_set_name<Ntk>::value;
+#pragma endregion
+
+#pragma region has_has_name
+template<class Ntk, class = void>
+struct has_has_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_has_name<Ntk, std::void_t<decltype( std::declval<Ntk>().has_name( std::declval<signal<Ntk>>() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_has_name_v = has_has_name<Ntk>::value;
+#pragma endregion
+
+#pragma region has_get_output_name
+template<class Ntk, class = void>
+struct has_get_output_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_get_output_name<Ntk, std::void_t<decltype( std::declval<Ntk>().get_output_name( uint32_t() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_get_output_name_v = has_get_output_name<Ntk>::value;
+#pragma endregion
+
+#pragma region has_set_output_name
+template<class Ntk, class = void>
+struct has_set_output_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_set_output_name<Ntk, std::void_t<decltype( std::declval<Ntk>().set_output_name( uint32_t(), std::string() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_set_output_name_v = has_set_output_name<Ntk>::value;
+#pragma endregion
+
+#pragma region has_has_output_name
+template<class Ntk, class = void>
+struct has_has_output_name : std::false_type
+{
+};
+
+template<class Ntk>
+struct has_has_output_name<Ntk, std::void_t<decltype( std::declval<Ntk>().has_output_name( uint32_t() ) )>> : std::true_type
+{
+};
+
+template<class Ntk>
+inline constexpr bool has_has_output_name_v = has_has_output_name<Ntk>::value;
 #pragma endregion
 
 /*! \brief SFINAE based on iterator type (for compute functions).

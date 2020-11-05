@@ -4,7 +4,7 @@
 #include <vector>
 #include "tt_utils.hpp"
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-pedantic"
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <kitty/kitty.hpp>
 #include <kitty/print.hpp>
 #pragma GCC diagnostic pop
@@ -89,6 +89,8 @@ namespace percy
         int64_t sat_time = 0;   ///< How much time was spent on UNSAT formulae (in us)
         int64_t unsat_time = 0; ///< How much time was spent on SAT formulae (in us)
         int64_t synth_time = 0; ///< How much time was spent on SAT formulae (in us)
+        int nr_vars = 0;
+        int nr_clauses = 0;
     }; 
 
     class spec
@@ -101,6 +103,7 @@ namespace percy
             std::vector<int> triv_functions; ///< Trivial outputs
             std::vector<int> synth_functions; ///< Nontrivial outputs
             std::vector<kitty::dynamic_truth_table> compiled_primitives; ///< Collection of concrete truth tables induced by primitives
+            std::vector<kitty::dynamic_truth_table> compiled_functions;
 
         public:
             int fanin = 2; ///< The fanin of the Boolean chain steps
@@ -113,7 +116,6 @@ namespace percy
             uint64_t triv_flag; ///< Is 1 at index i if output i is constant zero or one or a projection.
             int nr_triv; ///< Number of trivial output functions
             int nr_nontriv; ///< Number of non-trivial output functions
-            int nr_rand_tt_assigns; ///< Number of truth table bits to assign randomly in CEGAR loop
 
             bool add_nontriv_clauses = true; ///< Symmetry break: do not allow trivial operators
             bool add_alonce_clauses = true; ///< Symmetry break: all steps must be used at least once
@@ -302,7 +304,6 @@ namespace percy
 
             const kitty::dynamic_truth_table& get_dc_mask(std::size_t f_idx) const
             {
-                assert(f_idx < capacity);
                 return dc_masks[f_idx];
             }
 
@@ -318,6 +319,28 @@ namespace percy
             {
                 assert(i < capacity);
                 return synth_functions[i];
+            }
+
+            void add_function( kitty::dynamic_truth_table const& tt )
+            {
+              /* a function is an internal function */
+              // assert( tt.num_vars() == nr_in );
+
+              /* the function must be normal */
+              assert( kitty::get_bit( tt, 0 ) == false );
+
+              compiled_functions.emplace_back( tt );
+            }
+
+            uint32_t get_nr_compiled_functions() const
+            {
+              return compiled_functions.size();
+            }
+
+            kitty::dynamic_truth_table get_compiled_function( uint32_t index ) const
+            {
+              assert( index < compiled_functions.size() );
+              return compiled_functions.at( index );
             }
 
             void set_primitive(Primitive primitive)
@@ -347,6 +370,11 @@ namespace percy
                 }
             }
 
+            void add_primitive( kitty::dynamic_truth_table const& tt )
+            {
+              compiled_primitives.push_back( tt );
+            }
+
             bool is_primitive_set() const
             {
                 return compiled_primitives.size() > 0;
@@ -358,11 +386,16 @@ namespace percy
                 return compiled_primitives;
             }
 
+            const std::vector<kitty::dynamic_truth_table>&
+            get_compiled_functions() const
+            {
+              return compiled_functions;
+            }
+
             void clear_primitive()
             {
                 compiled_primitives.clear();
             }
-
     };
 
 }

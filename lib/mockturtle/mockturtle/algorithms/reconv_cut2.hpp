@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -107,7 +107,7 @@ bool node_build_cut_level_one_int( Ntk const& ntk, std::vector<typename Ntk::nod
   auto pos = 0;
   for ( const auto& l : leaves )
   {
-    uint32_t cost_curr = node_get_leaf_cost_one( ntk, l, fanin_limit );
+    uint32_t const cost_curr = node_get_leaf_cost_one( ntk, l, fanin_limit );
     if ( best_cost > cost_curr ||
          ( best_cost == cost_curr && best_fanin && ntk.level( l ) > ntk.level( *best_fanin ) ) )
     {

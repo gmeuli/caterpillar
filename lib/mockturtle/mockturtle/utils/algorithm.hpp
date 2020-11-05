@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -85,5 +85,50 @@ T ternary_tree_reduce( Iterator first, Iterator last, T const& init, TernaryOper
   break;
   }
 }
+
+template<class Iterator, class UnaryOperation, class T>
+Iterator max_element_unary( Iterator first, Iterator last, UnaryOperation&& fn, T const& init )
+{
+  auto best = last;
+  auto max = init;
+  for ( ; first != last; ++first )
+  {
+    if ( const auto v = fn( *first ) > max )
+    {
+      max = v;
+      best = first;
+    }
+  }
+  return best;
+}
+
+template<class T, typename = std::enable_if_t<std::is_integral_v<T>>>
+constexpr auto range( T begin, T end )
+{
+  struct iterator
+  {
+    using value_type = T;
+
+    value_type curr_;
+    bool operator!=( iterator const& other ) const { return curr_ != other.curr_; }
+    iterator& operator++() { ++curr_; return *this; }
+    iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
+    value_type operator*() const { return curr_; }
+  };
+  struct iterable_wrapper
+  {
+    T begin_;
+    T end_;
+    auto begin() { return iterator{begin_}; }
+    auto end() { return iterator{end_}; }
+  };
+  return iterable_wrapper{begin, end};
+};
+
+template<class T, typename = std::enable_if_t<std::is_integral_v<T>>>
+constexpr auto range( T end )
+{
+  return range<T>( {}, end );
+};
 
 } /* namespace mockturtle */

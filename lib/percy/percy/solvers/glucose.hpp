@@ -2,12 +2,15 @@
 
 #if !defined(_WIN32) && !defined(_WIN64)
 
+#undef var_Undef
+
 #pragma GCC diagnostic push
 
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wparentheses"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wpedantic"
+
 
 #ifndef USE_GLUCOSE
 #include <syrup/parallel/MultiSolvers.h>
@@ -18,6 +21,11 @@
 #endif
 
 #pragma GCC diagnostic pop
+
+#undef var_Undef
+
+#define var_Undef (0xffffffffU >> 4)
+
 
 namespace percy
 {
@@ -105,7 +113,7 @@ namespace percy
 #endif
         }
 
-        synth_result solve(int)
+        synth_result solve(int cl)
         {
 #ifdef USE_GLUCOSE
             Glucose::vec<Glucose::Lit> litvec;

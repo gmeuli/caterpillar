@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -60,11 +60,11 @@ namespace mockturtle
  * 4.
  *
    \verbatim embed:rst
-  
+
    Example
-   
+
    .. code-block:: c++
-   
+
       const klut_network klut = ...;
       xmg_npn_resynthesis resyn;
       const auto xmg = node_resynthesis<xmg_network>( klut, resyn );
@@ -82,7 +82,7 @@ public:
   }
 
   template<typename LeavesIterator, typename Fn>
-  void operator()( xmg_network& xmg, kitty::dynamic_truth_table const& function, LeavesIterator begin, LeavesIterator end, Fn&& fn )
+  void operator()( xmg_network& xmg, kitty::dynamic_truth_table const& function, LeavesIterator begin, LeavesIterator end, Fn&& fn ) const
   {
     assert( function.num_vars() <= 4 );
     const auto fe = kitty::extend_to( function, 4 );

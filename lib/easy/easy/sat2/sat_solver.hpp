@@ -36,16 +36,16 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wsign-compare"
-#include <glucose/glucose.hpp>
+#include <bill/sat/interface/glucose.hpp>
 #pragma clang diagnostic pop
 #elif __GNUC__ // GCC compiler
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#include <glucose/glucose.hpp>
+#include <bill/sat/interface/glucose.hpp>
 #pragma GCC diagnostic pop
 #else // other compilers
-#include <glucose/glucose.hpp>
+#include <bill/sat/interface/glucose.hpp>
 #endif
 
 #include <easy/utils/dynamic_bitset.hpp>

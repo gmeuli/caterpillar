@@ -8,3 +8,5 @@
 #include "encoders/ditt_encoder.hpp"
 #include "encoders/partial_dag_encoder.hpp"
 #include "encoders/maj_encoder.hpp"
+#include "encoders/mig_encoder.hpp"
+#include "encoders/ditt_maj_encoder.hpp"

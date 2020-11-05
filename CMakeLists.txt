@@ -5,11 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Options
-option(CATERPILLAR_EXAMPLES "Build examples" ON)
-option(CATERPILLAR_TEST "Build tests" OFF)
+option(CATERPILLAR_EXAMPLES "Build examples" OFF)
+option(CATERPILLAR_EXPERIMENTS "Build experiments" OFF)
+option(CATERPILLAR_TEST "Build tests" ON)
 
 option(CATERPILLAR_Z3 "Use z3" OFF)
-
 set(Z3_INCLUDE_DIR "" CACHE STRING "If set, use this as Z3 include directory")
 set(Z3_LINK_DIR "" CACHE STRING "If set, use this as Z3 link directory")
 
@@ -32,6 +32,11 @@ if(CATERPILLAR_EXAMPLES)
   add_subdirectory(examples)
 endif()
 
+
 if(CATERPILLAR_TEST)
   add_subdirectory(test)
+endif()
+
+if(CATERPILLAR_EXPERIMENTS)
+  add_subdirectory(experiments)
 endif()

@@ -17,10 +17,6 @@ if (NOT TARGET fmt)
   target_compile_definitions(fmt INTERFACE FMT_HEADER_ONLY)
 endif()
 
-if (NOT TARGET glucose)
-  add_library(glucose INTERFACE)
-  target_include_directories(glucose INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/glucose/include)
-endif()
 
 if (NOT TARGET kitty)
   add_library(kitty INTERFACE) # v0.4
@@ -38,9 +34,14 @@ if (NOT TARGET lorina)
   target_link_libraries(lorina INTERFACE rang fmt)
 endif()
 
+if (NOT TARGET json)
+  add_library(json INTERFACE) # v3.5.0
+  target_include_directories(json INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/json)
+endif()
+
 if (NOT TARGET percy)
   add_library(percy INTERFACE) # >v0.1.2
-  target_include_directories(percy INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/percy)
+  target_include_directories(percy SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/percy)
   target_compile_definitions(percy INTERFACE DISABLE_NAUTY)
 
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -62,13 +63,13 @@ endif()
 if (NOT TARGET mockturtle) # spectral c2e4149
   add_library(mockturtle INTERFACE)
   target_include_directories(mockturtle INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mockturtle)
-  target_link_libraries(mockturtle INTERFACE ez kitty lorina sparsepp percy)
+  target_link_libraries(mockturtle INTERFACE ez kitty lorina sparsepp percy bill)
 endif()
 
 if (NOT TARGET easy)
   add_library(easy INTERFACE)
   target_include_directories(easy INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/easy)
-  target_link_libraries(easy INTERFACE glucose)
+  target_link_libraries(easy INTERFACE bill)
 endif()
 
 if (NOT TARGET tweedledum)
@@ -77,3 +78,7 @@ if (NOT TARGET tweedledum)
   target_link_libraries(tweedledum INTERFACE easy fmt lorina kitty)
 endif()
 
+if (NOT TARGET bill)
+  add_library(bill INTERFACE)
+  target_include_directories(bill SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/bill)
+endif()

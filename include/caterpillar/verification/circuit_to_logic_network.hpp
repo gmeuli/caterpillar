@@ -3,6 +3,8 @@
 | See accompanying file /LICENSE for details.
 | Author(s): Mathias Soeken
 *-----------------------------------------------------------------------------*/
+#pragma once
+
 #include <cstdint>
 #include <optional>
 #include <vector>

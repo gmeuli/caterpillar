@@ -1,5 +1,5 @@
 /* mockturtle: C++ logic network library
- * Copyright (C) 2018  EPFL
+ * Copyright (C) 2018-2019  EPFL EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -111,7 +111,7 @@ public:
    *
    * \param name Optional name for the input
    */
-  signal create_pi( std::string const& name = {} );
+  signal create_pi( std::string const& name = std::string() );
 
   /*! \brief Creates a primary output in the network.
    *
@@ -123,7 +123,7 @@ public:
    * \param s Signal that drives the created primary output
    * \param name Optional name for the output
    */
-  void create_po( signal const& s, std::string const& name = {} );
+  void create_po( signal const& s, std::string const& name = std::string() );
 
   /*! \brief Creates a register output in the network.
    *
@@ -141,7 +141,7 @@ public:
    *
    * \param name Optional name for the register output
    */
-  signal create_ro( std::string const& name = {} );
+  signal create_ro( std::string const& name = std::string() );
 
   /*! \brief Creates a register input in the network.
    *
@@ -163,15 +163,15 @@ public:
    * \param s Signal that drives the created primary output
    * \param name Optional name for the output
    */
-  void create_ri( signal const& s, std::string const& name = {} );
+  void create_ri( signal const& s, std::string const& name = std::string() );
 
   /*! \brief Checks whether the network is combinational.
-   * 
+   *
    * Returns true if and only if the network has no registers (neither
    * register outputs nor register inputs).
    */
   bool is_combinational() const;
-  
+
   /*! \brief Checks whether a node is a constant node. */
   bool is_constant( node const& n ) const;
 
@@ -356,7 +356,7 @@ public:
    *
    * If ``old_node`` is drive to some output, then it will be replaced by
    * ``new_signal``.
-   * 
+   *
    * \brief old_node Driver to be replaced
    * \brief new_signal Signal replace ``old_node`` with
    */
@@ -443,13 +443,16 @@ public:
   /*! \brief Returns the level of a node. */
   uint32_t level( node const& n ) const;
 
-  /*! \brief Returns true if node is an AND gate. */
+  /*! \brief Returns true, if node is on critical path */
+  bool is_on_critical_path( node const& n ) const;
+
+  /*! \brief Returns true if node is a 2-input AND gate. */
   bool is_and( node const& n ) const;
 
-  /*! \brief Returns true if node is an OR gate. */
+  /*! \brief Returns true if node is a 2-input OR gate. */
   bool is_or( node const& n ) const;
 
-  /*! \brief Returns true if node is an XOR gate. */
+  /*! \brief Returns true if node is a 2-input XOR gate. */
   bool is_xor( node const& n ) const;
 
   /*! \brief Returns true if node is a majority-of-3 gate. */
@@ -460,6 +463,18 @@ public:
 
   /*! \brief Returns true if node is a 3-input XOR gate. */
   bool is_xor3( node const& n ) const;
+
+  /*! \brief Returns true if node is a primitive n-ary AND gate. */
+  bool is_nary_and( node const& n ) const;
+
+  /*! \brief Returns true if node is a primitive n-ary OR gate. */
+  bool is_nary_or( node const& n ) const;
+
+  /*! \brief Returns true if node is a primitive n-ary XOR gate. */
+  bool is_nary_xor( node const& n ) const;
+
+  /*! \brief Returns true if node is a general function node. */
+  bool is_function( node const& n ) const;
 #pragma endregion
 
 #pragma region Functional properties
@@ -470,7 +485,7 @@ public:
    * functions are AND, complemented edges are not taken into account.  Also,
    * in an MIG, all gate functions are MAJ, independently of complemented edges
    * and possible constant inputs.
-   * 
+   *
    * In order to retreive a function with respect to complemented edges one can
    * use the `compute` function with a truth table as simulation value.
    */
@@ -529,7 +544,7 @@ public:
    *              primary inputs (exclusive).
    */
   node pi_at( uint32_t index ) const;
-  
+
   /*! \brief Returns the primary output signal for an index.
    *
    * \param index A value between 0 (inclusive) and the number of
@@ -541,7 +556,7 @@ public:
    *
    * \param index A value between 0 (inclusive) and the number of
    *              register outputs (exclusive).
-   */  
+   */
   node ro_at( uint32_t index ) const;
 
   /*! \brief Returns the register input signal for an index.
@@ -899,7 +914,7 @@ public:
   uint32_t visited( node const& n ) const;
 
   /*! \brief Sets the visited value of a node. */
-  uint32_t set_visited( node const& n, uint32_t v ) const;
+  void set_visited( node const& n, uint32_t v ) const;
 
   /*! \brief An id that can be used as a visited flag.
    *
@@ -911,6 +926,26 @@ public:
   /*! \brief Increment the current traversal id. */
   void incr_trav_id() const;
 #pragma endregion
+
+#pragma region Signal naming
+  /*! \brief Checks if a signal has a name. */
+  bool has_name( signal const& s ) const;
+
+  /*! \brief Set the name of a signal. */
+  void set_name( signal const& s, std::string const& name );
+
+  /*! \brief Returns the name of a signal. */
+  std::string get_name( signal const& s ) const;
+
+  /*! \brief Checks if an output signal has a name. */
+  bool has_output_name( uint32_t index ) const;
+
+  /*! \brief Set the name of an output signal. */
+  void set_output_name( uint32_t index, std::string const& name );
+
+  /*! \brief Returns the name of an output signal. */
+  std::string get_output_name( uint32_t index ) const;
+#end endregion
 
 #pragma region General methods
   /*! \brief Returns network events object.
